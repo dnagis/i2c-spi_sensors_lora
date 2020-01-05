@@ -1,0 +1,826 @@
+scp /initrd/mnt/dev_save/packages/lora/lora_log ks:/home/lora/
+
+####Second passage (091219) : du SPI en USB pour connexion RFM95 Lora sur un ordi (qui n'a pas de GPIO)
+commandé un peu au pif des adaptateurs USB. Le premier reçu: FTDI 2232HL (gros breakout violet)
+https://www.ftdichip.com/Products/ICs/FT2232H.htm
+Des drivers VCP et D2XX ??
+google linux ft2232h -> la doc FTDI https://www.ftdichip.com/Support/Documents/AppNotes/AN_220_FTDI_Drivers_Installation_Guide_for_Linux.pdf
+page 2 ça parle de drivers VCP qui sont built in dans le kernel. dmesg -> OK j'ai deux nodes /dev/ttyUSB0 et 1 qui apparaissent.
+OK comment on utilise ces drivers VCP (Virtual COM Port)???
+
+https://pypi.org/project/pyftdi/ ??
+https://eblot.github.io/pyftdi/pinout.html --> pinout
+pip install pyftdi a l'air de passer en python2
+https://eblot.github.io/pyftdi/urlscheme.html -> j'aimerais essayer des trucs comme il y a à la fin 
+https://github.com/eblot/pyftdi/tree/master/pyftdi -> clone -> bin/ftdi_urls.py fait ftdi = Ftdi() puis ftdi.open_from_url('ftdi:///?') que j'essaierais bien 
+from pyftdi.ftdi import Ftdi
+	--> erreurs dans /usr/lib/python2.7/site-packages/pyftdi/usbtools.py --> les trois file=out remplacés par out
+	--> from urllib.parse import urlsplit -> ImportError: No module named parse le même usbtools.py from urllib.parse import urlsplit -> from urlparse import urlparse
+l'import marche mais plante au runtime
+j'essaie la branche python2.6 de pyftdi: https://github.com/eblot/pyftdi/tree/python2.6 marche pas
+je passe en python3
+pip3 install pyftdi
+
+
+https://github.com/eblot/pyftdi/issues/62 -> je me demande si pyftdi et le kernel serial driver "ftdi_sio" ne seraient pas deux manières d'accéder au chip???
+http://yosemitefoothills.com/Electronics/FT2232C-based_projects.html -> " The driver then creates /dev/ttyUSBx ports (major device number 188) which an application can use for input and output just like a standard serial I/O port.
+ The USB nature of the communication is hidden from the application as data is exchanged between the device and the application program."
+ 
+Tout ça me rappelle la grande époque de l'USB to serial... Peut être qu'en fouillant par là sans en me défocalisant du chip que j'utilise??? ***PL2303 --> digitemp***
+digitemp -> digitemp.c --> device file, serial port accès via owAcquire()
+"linux c device file serial port io"
+
+https://www.cmrr.umn.edu/~strupp/serial.html
+
+j'essaie les dongles USB rouges que j'avais acheté il y a longtemps: idem. 
+
+mon idée du soir: les exemples donnés par ftdi dans leur "release" : remplacer les ouvertures FT_open par des fdopen???
+
+https://www.ftdichip.com/Drivers/D2XX.htm -> https://www.ftdichip.com/Drivers/D2XX/Linux/libftd2xx-x86_64-1.4.8.gz
+
+des exemples de fdopen: https://stackoverflow.com/questions/6947413/how-to-open-read-and-write-from-serial-port-in-c
+
+https://connect.ed-diamond.com/GNU-Linux-Magazine/GLMF-220/Utilisation-avancee-de-l-interface-USB-RS232-FT232
+de la doc dans le kernel directos: les liens en haut de:
+https://github.com/torvalds/linux/blob/master/drivers/usb/serial/ftdi_sio.c
+j'arrive sur:
+https://www.intra2net.com/en/developer/libftdi/links.php
+https://code.google.com/archive/p/libmpsse/ -> basé sur libftdi
+
+https://www.intra2net.com/en/developer/libftdi/ -> c'est du cmake
+
+drivers/usb/serial/ftdi_sio.c m'intéresse +++ les ioctl??? est ce bien raisonnable???
+
+J2 - 10/12
+le dongle rouge 232 -> datasheet? taper en ioctl dessus pour blinker des led façon GPIO??
+le chip sur le dongle: "FT232RL" -> https://www.ftdichip.com/Products/ICs/FT232R.htm
+je regarde datasheet. J'ai des bus CBUS qui peuvent être configurés en GPIO.
+OK comment on lui parle??
+FTDI disent: "The VCP driver emulates a standard PC serial port such that the USB device may be communicated with as a standard RS232 device"
+
+doc: https://www.ftdichip.com/Support/Links.htm pour projets hors FTDI
+
+****Librairies open source: libftdi1 et libmpsse
+libftdi1-1.4
+#doc: https://www.intra2net.com/en/developer/libftdi/documentation/
+#Compilation
+	prereq libusb je prends 1.0.22 (--prefix=/usr --libdir=/usr/lib64)
+cmake --> build successful. 
+Les 2 exples simplissimes dans build/examples ont l'air de marcher. find_all trouve les deux.
+donc coexistance libftdi libusb-based avec le driver du kernel ==> pose pas de pb... cool!
+
+Hello World allumage de led --> compilation avec: 
+
+gcc -o vvnx -I/usr/include/libftdi1 -lftdi1 vvnx.c
+
+**bitbang**
+https://hackaday.com/2009/09/22/introduction-to-ftdi-bitbang-mode/ -> interessant mais du code deprecated (ftdi_enable_bitbang) dans les exemples. libftdi/examples/bitbang.c
+hyper interessant:  ftdi_usb_open(ftdi, 0x0403, 0x6001) -> /* Open FTDI device based on FT232R vendor & product IDs */
+libftdi/examples/bitbang.c fait de l'allumage de led sans problème
+un peu de lecture bitbang: https://en.wikipedia.org/wiki/Bit_banging -> cohérent avec https://github.com/adafruit/Adafruit_Python_MCP3008/blob/master/Adafruit_MCP3008/MCP3008.py
+bitbang ce serait du SPI côté software donc sans avoir besoin de hardware spécifique... 
+
+
+OK maintenant: SPI 
+libftdi et SPI sur le site de libftdi apparament il faut une autre librairie: libmpsse
+https://www.intra2net.com/en/developer/libftdi/links.php -> https://code.google.com/archive/p/libmpsse/
+libmpsse-1.3.tar.gz
+CFLAGS=-I/usr/include/libftdi1 ./configure --prefix=/usr --libdir=/usr/lib64
+builder les exemples: CFLAGS=-I/usr/include/libftdi1 CC=gcc make
+
+utilisation de libmpsse -> ouvrir mon device
+exemples libmpsse -> gpio appelle la fonction MPSSE de mpsse.c qui ne plante pas... c'est la fête!
+
+#Point pinout du dongle violet carré acheté chez aliexpress 
+https://www.ftdichip.com/Support/Documents/DataSheets/ICs/DS_FT2232H.pdf ->
+	p.9 j'ai un tableau de correspondance A[D;C]BUS[0;7] et B[D;C]BUS[0;7] (ce qu'il y a sur le dongle) et MPSSE
+correspondance avec libmpsse -> libmpsse-1.3/docs/AN_135_MPSSE_Basics.pdf
+
+
+l'exemple libmpsse gpio -> devrait faire blinker GPIOL0 soit AD4 sur mon dongle d'après DS_FT2232H.pdf --> je confirme!
+
+Maintenant: le SPI. Commencer par le mcp3008 qui me parait plus simple, et mieux documenté.
+
+#de la doc sur le protocole SPI
+https://fr.wikipedia.org/wiki/Serial_Peripheral_Interface
+https://www.analog.com/en/analog-dialogue/articles/introduction-to-spi-interface.html#
+	Les 4 modes du SPI. CPOLarity | CPHAse -> full duplex: CPHA détermine quand Rx et quand Tx en fonction rising/falling du signal clock shifting = tx, sampling = read-in
+
+DSmcp3008: "data is always output from the device on the falling edge of the clock" -> donc le master doit read in = sampling on the falling edge. 
+donc je devrais être en SPI mode 1. 	
+
+
+Le graal: trouver du code en C qui utilise libmpsse pour parler en SPI à un mcp3008. Si je trouve pas, python et essayer le binding C <-> python?
+README.SPI dans les docs libmpsse-1.3 est très bien expliqué.
+
+* recherche github
+mpsse mcp3008 -> rien
+mpsse SPI -> dans l'onglet code des résultats ya qq trucs, repos aussi
+
+* keywords google: 
+mpsse_context mcp3008 -> j'ai que des faux résultats (echo de la recherche google je suppose)	
+mpsse mcp3008
+	https://forums.adafruit.com/viewtopic.php?f=19&t=148607 lien dans dernier post sur exple en python:
+		https://github.com/adafruit/Adafruit_Python_MCP3008/blob/master/Adafruit_MCP3008/MCP3008.py
+
+MCP3008.py -> "Build a single channel read command For example channel zero = 0b11000000" -> 
+
+essais en C à partir de libmpsse-1.3/src/examples
+la ligne de commande compil (sur gpio.c pour commencer)
+gcc -I/usr/include/libftdi1 vvnx.c -o vvnx -lmpsse
+
+
+struct mpsse_context *monspi = NULL;
+monspi = MPSSE(SPI0, ONE_MHZ, MSB))
+monspi->open
+printf("%s initialized at %dHz (SPI mode 0)\n", GetDescription(monspi), GetClock(monspi));
+
+
+Grosse lecture de https://github.com/adafruit/Adafruit_Python_MCP3008/blob/master/Adafruit_MCP3008/MCP3008.py
+et de la page 19 de la datasheet du mcp3008
+premier bit = start bit "The first clock received with CS low and D IN high will constitute a start bit."
+bit 2 = Single/Diff
+D2 D1 et D0 c'est la channel selection
+donc moi ce qu'il faut que j'écrive c'est 11000000
+mais sous quel format? 
+int Write(struct mpsse_context *mpsse, char *data, int size);
+11000000 = C0 donc j'essaie spi.Write("\xC0")
+
+marche pô
+
+https://github.com/Wyliodrin/wiringPi/blob/master/wiringPi/mcp3004.c
+	myAnalogRead -> où est la fonction wiringPiSPIDataRW??? -> git clone https://github.com/Wyliodrin/wiringPi.git
+
+meilleure idée du soir: à la lecture des pages 19&20 de la DS MCP3008 il me faut du duplex: les premiers bits de la réponse arrivent alors
+que les derniers bit du byte envoyé sont pas encore fini d'envoyer: fonction "transfer" en python spi, qui a l'air d'exister chez libmpsse
+
+
+le 14/12 découverte du jour: le code python libmpsse marche sans aucun problème... (en tout cas pour gpio.py)
+
+Les pins FT-2232H -> yavait je pense un pb MISO/MOSI: démystification page 14 de la datasheet:
+AD1 -> TDI/DO type OUTPUT 
+AD2 -> TDO/DI type INPUT
+
+AD1 du FT-2232H sur DIN du MCP3008 m'a donné des infos hier soir (pas que 0 ou 1)
+
+15/12
+des exercices hex / bin en python pour comprendre ce que je fais
+'0b101011101010'
+'0xFF'
+
+https://stackoverflow.com/questions/7396849/convert-binary-to-ascii-and-vice-versa
+https://www.devdungeon.com/content/working-binary-data-python
+
+Python 2.7.10
+>>> bin(3) -> '0b11'
+>>> int('0b11',2) -> 3 
+>>> int('0xAA',16) -> 170
+>>> hex(255) -> '0xff'
+>>> ord('a') -> 97 			#The ord() method returns an integer representing the Unicode code point of the given Unicode character.
+>>> chr(97) -> 'a' 			#The chr() method returns a character (a string) from an integer (represents unicode code point of the character).
+>>> ord('\xff') -> 255 
+>>> hex(0b10000000) -> '0x80'
+
+>>> 0b1011 | 0b1111 -> 		#15 attention marche pas avec des string, et renvoie sous forme d'integer
+>>> bin(0b1001011101 >> 1) -> '0b100101110'
+>>> bin(0b1001011101 << 3) -> '0b1001011101000'
+
+>>> import binascii
+>>> binascii.hexlify('a') -> '61' et 0x61 c'est bien l'hexa de 'a' dans la table de charactères ASCII
+>>> int(binascii.hexlify('a'), 16) -> 97
+
+
+https://www.raspberrypi-spy.co.uk/2013/10/analogue-sensors-on-the-raspberry-pi-using-an-mcp3008/
+
+utilise spidev: xfer2(list of values[, speed_hz, delay_usec, bits_per_word])
+  adc = spi.xfer2([1,(8+channel)<<4,0]) --> sends 00000001 10000000 00000000 to the device (pour le 2ème byte: >>> bin(8) ==> '0b1000' puis shift à gauche de 4) 
+  data = ((adc[1]&3) << 8) + adc[2] --> The device then sends back 3 bytes in response. The “data=” line extracts 10 bits from that response and this represents the measurement.
+  return data
+
+https://github.com/adafruit/Adafruit_Python_MCP3008/blob/master/Adafruit_MCP3008/MCP3008.py utilise aussi: xfer2 (on retombe sur spidev)
+https://github.com/adafruit/Adafruit_Python_GPIO/blob/master/Adafruit_GPIO/SPI.py
+
+
+OK THE grosse question c'est: 
+comment passer de xfer2 (spidev) à Transfer (libmpsse)
+
+--déclarer l'input string comme dans mpsse, voir la taille que ça fait. sortir chaque byte en binary.
+libmpsse définit transfer comme: def Transfer(self, data): @data - A string of bytes to be written. et return a string of len(data) bytes.
+
+donc il me faut une string of bytes.
+x = "Python, Bytes" -> print(len(x)) -> 13
+x = "\x03\x00\x00\x00" -> print(len(x)) -> 4
+x = '0b11000000' -> print(len(x)) -> 10 --> explique pourquoi je recevais 80 bits hier
+donc il me faudrait: 00000001 10000000 00000000 dans un byte object
+>>> hex(0b1) -> '0x1'
+>>> hex(0b10000000) -> '0x80'
+x = "\x01\x80\x00"
+len(x) = 3
+
+OK ça marche libmpsse me fait fonctionner le FT2232H en SPI:
+Datasheet FT2232H pour le pinout: p.9 la colonne MPSSE donne la correspondance SPI avec ce qu'il y a sur les pins du module
+AD1 (TDI/DO = OUTPUT cf p.14) sur DIN du mcp3008
+AD2 (TDO/DI) sur DOUT du mcp3008
+AD3 (CS) et AD0 (CLK) pas de pb
+****Ne pas oublier d'alimenter le mcp3008!!!!****
+
+spi = MPSSE(SPI0, ONE_MHZ, MSB)
+spi.Start()	
+resp = spi.Transfer("\x01\x80\x00")
+#0x01=>00000001 -> dernier bit = start bit, 0x80=>10000000 -> bit 1: single, puis les autres: 000 => channel 1, le reste des bits à 0 car c'est là qu'on lit
+#print(bin(ord(resp[2]))) #lire un des bytes (ord() sert à extraire un chiffre du byte, sinon python considère que c'est str())
+#print((hex(ord(resp[1])))) #voir un des bytes en hex
+result = ((ord(resp[1])&3) << 8) + ord(resp[2]) #extraire les 10 bits de reponse
+print(result)			
+spi.Stop()				
+spi.Close()
+
+en C ça donne:
+
+gcc -I/usr/include/libftdi1 vvnx.c -o vvnx -lmpsse
+
+#include <stdio.h> <stdlib.h> <mpsse.h>
+
+struct mpsse_context *monspi = NULL;
+unsigned char *data = NULL;
+int result;
+
+monspi = MPSSE(SPI0, ONE_MHZ, MSB);	
+Start(monspi);			
+data = Transfer(monspi, "\x01\x80\x00", 3);			
+Stop(monspi);		
+Close(monspi);
+
+//printf("byte 1 = 0x%02x\n", data[1]); //voir un des bytes	
+result = ((data[1]&3) << 8) + data[2];	
+printf("res = %i\n", result);
+	
+	
+
+ToDo:
+laisser sédimenter qqes jours et voir si j'arrive à le reproduire.
+
+Maintenant: https://gitlab.com/the-plant/raspi-lora -> trouver les homologies, essayer de parler en SPI au RFM95
+branchements Le MI du Breakout sur l'input de FT2232H ()
+
+DS semtech p.80 -> description de leur vision de SPI (CS = NSS chez semtech)
+p.90 description des registers.
+raspi-lora/lora.py j'ai spidev avec la vitesse dans init
+bien analyser _spi_write() de raspi_lora/lora.py pour faire pareil avec libmpsse
+en python c'est quoi -> bytearray --> le type "bytes" a pas l'air d'exister en python2
+a = bytearray([1,2,3])
+type(a) --> <type 'bytearray'>
+[p for p in a] --> [1, 2, 3]
+b=['x']
+c=['y']
+b+c -> ['x', 'y']
+
+[register | 0x80] -> l'adresse du register op_mode c'est 0x01 (DS page 90)
+0x01 | 0x80 -> 129
+bin(0x01) -> 0b00000001
+bin(0x80) -> 0b10000000
+si je OR ( | ) les deux:
+0b10000001
+int('0b10000001',2) -> 129 OK je comprends au vu de la datasheet page 80 -> on OR avec 0x80 pour que le premier bit soit à write
+hex(129) -> 0x81
+
+MODE_SLEEP | LONG_RANGE_MODE
+LONG_RANGE_MODE = 0x80
+MODE_SLEEP = 0x00
+-> si on OR les deux: 0x80
+
+j'essaie de:
+1)faire un SPI write de "\x81\x80" entouré de spi.Start() / spi.Stop()
+
+2)sleep 0.1s
+
+3)spi transfer de "\x01\x00" (pareil: entouré de spi.Start() / spi.Stop())
+
+
+hypothèse: j'aurais la data dans le 2ème byte???
+
+spi = MPSSE(SPI0, ONE_MHZ, MSB)
+
+spi.Start()	# Bring chip-select low
+
+spi.Write("\x81\x80")		
+
+spi.Stop()	# Bring chip-select high
+
+sleep(0.1)
+
+spi.Start()	# Bring chip-select low
+
+resp = spi.Transfer("\x01\x00")
+
+spi.Stop()	# Bring chip-select high
+
+print(bin(ord(resp[0])), bin(ord(resp[1])))
+		
+spi.Close()	
+
+
+ce transfer me donne: ('0b10100000', '0b10000000')
+
+je vais essayer de lire la frequence...
+RegFrfMsb -> Adress 0x06 (datasheet page 90)
+je resp = spi.Transfer("\x06\x00")
+je récupère resp[1] = '0x6c' ce qui correspond à ce que j'attends 
+pour \x07 (RegFrfMid) je récupère 0x80 et pour 0x08 -> 0x00 OK ça colle
+
+
+mardi 171219
+configuration avance, fonctions spi_read spi_transfer...
+je commence à essayer de conprendre le mécanisme de réception
+La partie de la datasheet qui correspond commence page 34.
+--> je suis à fond sur l'interrupt qui signale Rx -> p.45 DIO , correspond au pin D0 du RFM95 que j'avais branché sur le raspberry
+ok je comprends dans lora.py _handle_interrupt() est assignée quand le GPIO shifte avec GPIO.add_event_detect(self._interrupt, GPIO.RISING, callback=self._handle_interrupt)
+va falloir que je trouve un équivalent de cet event detect chez libftdi1 ou libmpsse
+
+
+
+
+
+
+
+####First passage: lora en python sur un NUC
+Kloug et moi on aimerait bien pouvoir faire des tests avec nos modules LoRa avec le RPi
+Le module LoRa sur lequel on bosse avec Kloug est piloté en SPI. (j'avais déjà bossé sur SPI pour le MCP3008)
+Plusieurs projets concernant cette puce (sx127x) sur github utilisent:
+
+import spidev 
+import RPi.GPIO as GPIO
+
+https://gitlab.com/the-plant/raspi-lora
+https://github.com/dudmuck/python-sx127x
+https://github.com/Inteform/esp32-lora-library
+
+modprobe spidev
+modprobe spi-bcm2835
+
+
+##spidev - partie humaine
+
+https://pypi.org/project/spidev/#files --> spidev-3.4.tar.gz
+--> sa compilation (python setup.py build) crée un .so. L'import marche sans problème sur le NUC
+---> Pour le pi, je pompe les commandes de build dans l'output de setup.py. Cross compile OK, le spidev.so est OK pour ARM ***MAIS*** à l'import me donne du undefined symbol
+
+sur le NUC j'ai une librairie python: 
+ldd /usr/bin/python2 -->libpython2.7.so.1.0 => /usr/lib64/libpython2.7.so.1.0 (0x00007ff138ea8000)
+
+sur le RPi j'avais compilé python sans --enable-shared. En reprenant recette dans mtox/rpi je peux re-crosscompiler avec enable-shared 
+sur le Rpi j'ai: 
+	/bin/python2.7
+	ldd /bin/python2.7 --> link des librairies mais pas libpython2.7.so*
+
+je re- cross compile python
+cp python2.7 python2.7_backup
+scp python zero:/bin/python2.7 --> je cp ce nouveau python2.7 en python2.7_new
+scp libpython2.7.so* zero:/lib/
+
+sur le pi: même avec ldd /bin/python2.7 
+	...
+	libpython2.7.so.1.0 => /lib/libpython2.7.so.1.0 (0xb6d35000)
+	...
+	
+	
+j'ai l'erreur 
+
+>>> import spidev
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+ImportError: /lib/python2.7/site-packages/spidev.so: undefined symbol: __aeabi_dcmple
+
+nouvelle hypothèse:
+
+sur le pi j'ai
+ldd /lib/python2.7/site-packages/spidev.so ---> statically linked
+
+pour corriger ça je refait la compil de spidev mais au link (la deuxième commande: celle avec arm-linux-gnueabihf-ld ...) je mets un verbose pour m'apercevoir
+que j'avais pas la librairie dans -L${CROSSBASE}/lib
+
+Maintenant ldd /lib/python2.7/site-packages/spidev.so --> 
+	...
+	libpython2.7.so.1.0 => /lib/libpython2.7.so.1.0 (0xb6d7b000)
+	...
+	
+et l'import marche
+
+
+
+
+##################################################################################################################################
+
+
+
+##################################################################################################################################
+
+
+
+##spidev - code pur et dur
+
+
+
+
+
+python setup.py build --> donne des lignes de commande avec gcc, tu fais les mêmes mais avec arm-linux-gnueabihf-gcc
+
+/usr/lib/python2.7/site-packages/spidev-3.4-py2.7.egg-info
+build/lib.linux-x86_64-2.7/spidev.so -> /usr/lib/python2.7/site-packages
+
+
+https://stackoverflow.com/questions/28191521/cross-compiling-py-spidev-for-arm
+export ARCH=arm
+PLAT=arm-linux-gnueabihf-
+export CROSS_COMPILE=arm-linux-gnueabihf-
+export PATH=$PATH:/initrd/mnt/dev_save/rpi/cross/bin
+export CC="${PLAT}gcc -pthread"
+export LDSHARED="${CC} -shared"
+export CROSSBASE=/initrd/mnt/dev_save/rpi/cross/arm-linux-gnueabihf
+export CFLAGS="-I${CROSSBASE}/include"
+export LDFLAGS="-L${CROSSBASE}/lib"
+
+python setup.py install --prefix=/root/destdir
+
+ImportError: /lib/python2.7/site-packages/spidev.so: undefined symbol: Py_InitModule4_64
+
+scp /root/destdir/lib/python2.7/site-packages/spidev.so zero:/lib/python2.7/site-packages/
+
+
+https://stackoverflow.com/questions/17704067/cross-compiling-python-native-c-extensions-with-distutilscross-setup-py-wont-a
+
+###autre essai!
+
+export CROSSBASE=/initrd/mnt/dev_save/rpi/cross/arm-linux-gnueabihf
+export PATH=$PATH:/initrd/mnt/dev_save/rpi/cross/bin
+export CC=arm-linux-gnueabihf-gcc
+export LDSHARED="arm-linux-gnueabihf-ld -shared"
+python setup.py build
+
+creating build/temp.linux-x86_64-2.7
+arm-linux-gnueabihf-gcc -fno-strict-aliasing -g -O2 -DNDEBUG -g -fwrapv -O3 -Wall -Wstrict-prototypes -fPIC -I${CROSSBASE}/include/python2.7 -c spidev_module.c -o spidev_module.o
+creating build/lib.linux-x86_64-2.7
+arm-linux-gnueabihf-ld -shared build/temp.linux-x86_64-2.7/spidev_module.o -L${CROSSBASE}/lib -lpython2.7 -o build/lib.linux-x86_64-2.7/spidev.so
+
+scp build/lib.linux-x86_64-2.7/spidev.so zero:/lib/python2.7/site-packages/
+
+--> autre erreur avec ça:
+
+ImportError: /lib/python2.7/site-packages/spidev.so: undefined symbol: __aeabi_dcmple
+
+
+https://stackoverflow.com/questions/11643666/python-importerror-undefined-symbol-for-custom-c-module
+
+sans le shared:
+arm-linux-gnueabihf-ld build/temp.linux-x86_64-2.7/spidev_module.o -L${CROSSBASE}/lib -lpython2.7 -o build/lib.linux-x86_64-2.7/spidev.so
+
+
+j'essaie de compiler la librairie de python:
+export PATH=$PATH:/initrd/mnt/dev_save/rpi/cross/bin
+export PKG_CONFIG_PATH=/initrd/mnt/dev_save/cross/arm-linux-gnueabihf/lib/pkgconfig/
+
+./configure --with-libs="-lz -lcrypt -lssl -lsqlite3" --prefix= --host=arm-linux-gnueabihf \
+--build=x86_64-vinvin-linux-gnu --disable-ipv6 ac_cv_file__dev_ptmx=no ac_cv_file__dev_ptc=no \
+--enable-shared 
+
+me donne un libpython2.7.so que je pose sur le pi dans /lib/
+
+maintenant je recompile spidev.so en espérant que ça prendra la bonne lib.
+
+###autre essai!
+export PATH=$PATH:/initrd/mnt/dev_save/rpi/cross/bin
+export CROSSBASE=/initrd/mnt/dev_save/rpi/cross/arm-linux-gnueabihf
+
+arm-linux-gnueabihf-gcc -fno-strict-aliasing -g -O2 -DNDEBUG -g -fwrapv -O3 -Wall -Wstrict-prototypes -fPIC -I${CROSSBASE}/include/python2.7 -c spidev_module.c -o spidev_module.o
+arm-linux-gnueabihf-ld -shared spidev_module.o -L${CROSSBASE}/lib -lpython2.7 -o spidev.so
+--verbose
+arm-linux-gnueabihf-ld --verbose -shared spidev_module.o -L${CROSSBASE}/lib -lpython2.7 -o spidev.so
+
+attempt to open /initrd/mnt/dev_save/rpi/cross/arm-linux-gnueabihf/lib/libpython2.7.so failed --> pourquoi je l'ai pas???
+attempt to open /initrd/mnt/dev_save/rpi/cross/arm-linux-gnueabihf/lib/libpython2.7.a succeeded
+
+je mets libpython2.7.so et je relance arm-linux-gnueabihf-ld ...
+
+attempt to open /initrd/mnt/dev_save/rpi/cross/arm-linux-gnueabihf/lib/libpython2.7.so succeeded
+
+je copie sur le zero:
+scp spidev.so zero:/lib/python2.7/site-packages/
+
+maintenant sur le zero:
+ldd /lib/python2.7/site-packages/spidev.so
+	libpython2.7.so.1.0 => /lib/libpython2.7.so.1.0 (0xb6d7b000)
+	
+ça marche!!! et j'ai l'ancien executable python, pas celui linké à la librairie.
+
+#####RPi.GPIO
+
+export PATH=$PATH:/initrd/mnt/dev_save/rpi/cross/bin
+export CROSSBASE=/initrd/mnt/dev_save/rpi/cross/arm-linux-gnueabihf
+
+pour avoir la suite: python setup.py build, et j'adapte 
+
+arm-linux-gnueabihf-gcc -pthread -fno-strict-aliasing -g -O2 -DNDEBUG -g -fwrapv -O3 -Wall -Wstrict-prototypes -fPIC -I${CROSSBASE}/include/python2.7 -c source/py_gpio.c -o build/temp.linux-x86_64-2.7/source/py_gpio.o
+arm-linux-gnueabihf-gcc -pthread -fno-strict-aliasing -g -O2 -DNDEBUG -g -fwrapv -O3 -Wall -Wstrict-prototypes -fPIC -I${CROSSBASE}/include/python2.7 -c source/c_gpio.c -o build/temp.linux-x86_64-2.7/source/c_gpio.o
+arm-linux-gnueabihf-gcc -pthread -fno-strict-aliasing -g -O2 -DNDEBUG -g -fwrapv -O3 -Wall -Wstrict-prototypes -fPIC -I${CROSSBASE}/include/python2.7 -c source/event_gpio.c -o build/temp.linux-x86_64-2.7/source/event_gpio.o
+arm-linux-gnueabihf-gcc -pthread -fno-strict-aliasing -g -O2 -DNDEBUG -g -fwrapv -O3 -Wall -Wstrict-prototypes -fPIC -I${CROSSBASE}/include/python2.7 -c source/soft_pwm.c -o build/temp.linux-x86_64-2.7/source/soft_pwm.o
+arm-linux-gnueabihf-gcc -pthread -fno-strict-aliasing -g -O2 -DNDEBUG -g -fwrapv -O3 -Wall -Wstrict-prototypes -fPIC -I${CROSSBASE}/include/python2.7 -c source/py_pwm.c -o build/temp.linux-x86_64-2.7/source/py_pwm.o
+arm-linux-gnueabihf-gcc -pthread -fno-strict-aliasing -g -O2 -DNDEBUG -g -fwrapv -O3 -Wall -Wstrict-prototypes -fPIC -I${CROSSBASE}/include/python2.7 -c source/common.c -o build/temp.linux-x86_64-2.7/source/common.o
+arm-linux-gnueabihf-gcc -pthread -fno-strict-aliasing -g -O2 -DNDEBUG -g -fwrapv -O3 -Wall -Wstrict-prototypes -fPIC -I${CROSSBASE}/include/python2.7 -c source/constants.c -o build/temp.linux-x86_64-2.7/source/constants.o
+
+arm-linux-gnueabihf-gcc -pthread -shared build/temp.linux-x86_64-2.7/source/py_gpio.o build/temp.linux-x86_64-2.7/source/c_gpio.o build/temp.linux-x86_64-2.7/source/cpuinfo.o build/temp.linux-x86_64-2.7/source/event_gpio.o build/temp.linux-x86_64-2.7/source/soft_pwm.o build/temp.linux-x86_64-2.7/source/py_pwm.o build/temp.linux-x86_64-2.7/source/common.o build/temp.linux-x86_64-2.7/source/constants.o -L${CROSSBASE}/lib -lpython2.7 -o build/lib.linux-x86_64-2.7/RPi/_GPIO.so
+
+build/lib.linux-x86_64-2.7/RPi/_GPIO.so --> je réserve
+
+à l'install sur le NUC tout part dans /usr/lib/python2.7/site-packages/RPi  --> je m'en inspire pour le RPi
+
+scp -r /usr/lib/python2.7/site-packages/RPi zero:/lib/python2.7/site-packages/
+scp _GPIO.so zero:/lib/python2.7/site-packages/RPi/
+
+--> l'import marche
+
+
+####python-sx127x
+scp -r python-sx127x/sx127x zero:/lib/python2.7/site-packages/
+
+import sx127x en python = OK
+
+modprobe spidev
+modprobe spi-bcm2835
+
+connexions: 
+Rpi	(physical pin)			Module
+MOSI (19)					MO
+MISO (21)					MI
+SCLK (23)					SCK
+CS(0) (24)					NSS
+
+CS/NSS ce serait du SPI: chip select
+
+
+3V3 et GND of course...
+
+pour:
+
+python-sx127x/examples/test.py 
+
+
+###Die lecture de la datasheet semtech: 
+	S'il y a un pin reset sur la breakout: devrait correspondre à ce qu'il y a page 117. Donc si tu le pull low tu devrais 
+	avoir les valeurs de register par default et ainsi checker la lecture des registers.
+	
+###Die lecture raspi-lora projet https://gitlab.com/the-plant/raspi-lora
+	serait du python3. mais simplissime, et pas d'histoire d'antenna switch (python-sx127x) que je comprends pas.
+	est pour RFM95, pas sûr que ce soit le même que le mien...
+	tester déjà voir si marche ou pas (python3/python2) parce que si ça se trouve ya que quelques lignes à adapter?
+	mon premier point devrait être: réécrire quelque chose qui lit un register comme dans raspi-lora/lora.py lignes 56/59 -> 
+	spi_write/spi_read du register REG_01_OP_MODE = 0x01
+	
+il faut prendre une loupe et regarder la puce: p10 de la datasheet: pas d'ambiguité ça doit être marqué.	
+il FAUT acheter un adaptateur SPI USB pour faire ça sur un ordi. même si ça sert à rien...
+il faut démystifier l'histoire de la bande que j'utilise: laquelle j'ai choisie???
+il faut voir quelle configuration fait le projet qui fonctionne sur esp32 pour le copier.
+
+lecture au café avant rdv visite DIE: interrupts pour essayer de comprendre connexion: p35 datasheet: description du fonctionnement.
+
+retour Ganges 16/11/19 -> il faut avancer doucement: 
+bosser sur le projet python3 (python3, vraiment????) https://gitlab.com/the-plant/raspi-lora
+	juste pour lire les registers en ayant quelque chose qui correspond à la datasheet
+	
+#171119
+adapter raspi-lora pour mon rpi 
+je vois dans raspi_lora/lora_constants.py:
+	-> from enum import Enum 
+	-> No module named enum sur le rpi alors que sur l'ordi je l'ai
+>>> help ("modules")
+>>> help ("enum") --> /usr/lib/python2.7/site-packages/enum/__init__.py --> donc comme c'est pas /usr/lib64 ça a du être installé après
+
+scp -r /usr/lib/python2.7/site-packages/enum zero:/lib/python2.7/site-packages/
+--> ok import enum fonctionne 
+
+scp -r raspi_lora zero:/lib/python2.7/site-packages/
+import raspi_lora ne plante pas sur le rpi...
+
+les exemples raspi_lora sont dans son README.md
+from raspi_lora import LoRa, ModemConfig
+lora = LoRa(0, 17, 2, modem_config=ModemConfig.Bw125Cr45Sf128, tx_power=14, acks=True)
+
+--> plante pas, donc c'est pas du python3!!!
+
+je sais pas où brancher l'interrupt dont parle raspi-lora
+-->http://www.airspayce.com/mikem/arduino/RadioHead/classRH__RF95.html --> me donnent la réponse:
+	à Connecting RFM95/96/97/98 and Semtech SX1276/77/78/79 to Arduino --> c'est DIO0
+	
+bon, maintenant va falloir configurer pour que l'esp32 et le raspi soient sur même fréquence et même config
+
+
+j'essaie de send avec raspi_lora:
+
+>>> from raspi_lora import LoRa, ModemConfig
+>>> lora = LoRa(0, 17, 2, modem_config=ModemConfig.Bw125Cr45Sf128, tx_power=14, acks=True)
+>>> message = "Hello there!"
+>>> status = lora.send_to_wait(message, 10, retries=2)
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+  File "/lib/python2.7/site-packages/raspi_lora/lora.py", line 174, in send_to_wait
+    self.send(data, header_to, header_id=self._last_header_id, header_flags=header_flags)
+  File "/lib/python2.7/site-packages/raspi_lora/lora.py", line 164, in send
+    self._spi_write(REG_00_FIFO, payload)
+  File "/lib/python2.7/site-packages/raspi_lora/lora.py", line 203, in _spi_write
+    self.spi.xfer([register | 0x80] + payload)
+TypeError: Non-Int/Long value in arguments: b696e0f8.
+
+
+--> avant de s'attaquer à ça commencer par essayer de receive sur le rpi puisque c'est plutôt dans ce sens que je veux bosser...
+
+eh ben... j'essaie le lendemain: l'import ne marche plus!!!
+
+File "raspi_lora.py", line 2, in <module>
+from raspi_lora import LoRa, ModemConfig
+ImportError: cannot import name LoRa
+
+ouahhhhh la looose: j'ai appelé mon fichier de test /root/raspi_lora.py --> il le prend en import!!!
+
+bon donc j'essaie de Rx: je time.sleep en attendant. mais marche pas...
+
+je préfère bosser sur le transmit parce que le loop pour rx en python pas sûr que je comprenne
+
+rpi: ~ # cat lora_vvnx.py 
+#!/bin/python
+from raspi_lora import LoRa, ModemConfig
+lora = LoRa(0, 17, 2, modem_config=ModemConfig.Bw125Cr45Sf128, tx_power=14, acks=True)
+message = "Hello there!"
+status = lora.send_to_wait(message, 10, retries=2)
+--> toujours erreur de self.spi.xfer([register | 0x80] + payload)
+
+Bon j'ai plusieurs pistes à fouiller: 
+-la configuration du modem, 
+-et spi xfer qui marche pas
+
+mais j'aimerais d'abord arriver à lire un register
+status = lora._spi_read(REG_01_OP_MODE) -> NameError: name 'REG_01_OP_MODE' is not defined
+je remplace par 0x01 --> me donne 129 -> en python bin(129)
+get_bin = lambda x, n: format(x, 'b').zfill(n)
+get_bin(129,8)
+10000001 --> datasheet page 93: je serais en stdby mode et en lora mode
+
+j'essaie de voir la fréquence? -> print %x en bash
+0x06 -> 228 -> e4
+0x07 -> 192 -> c0
+0x08 -> 0
+
+la freq par defaut c'est 915... p 90 j'ai les defaults: 0x6c8000 et page 109 l'explication du calcul
+0x6c8000 -> 32 * FRF / 2^19 -> echo $((0x6c8000)) -> 7110656 -> 32 * 7110656 / (524288) -> 434
+là j'ai 0xe4c000 -> 14991360 -> 32 * 14991360 / (524288) -> 915 BINGO et bonne nuit...
+
+Donc.... si 915 c'est pas la valeur par défaut: ça veut dire que l'écriture dans les registers à certains endroits marchent: c'est juste dans send_to_wait que ça marche pas...
+dans le projet python-sx127x -> dans sx127x.py voir writeFifo
+
+20/11 je bosse sur l'erreur spidev au send -> raspi_lora/lora.py", line 203, in _spi_write
+vi /lib/python2.7/site-packages/raspi_lora/lora.py -> li 203
+
+    def _spi_write(self, register, payload):                                                 
+        if type(payload) == int:                                                            
+            payload = [payload]                                                  
+        elif type(payload) == bytes:                                              
+            payload = [p for p in payload]                                        
+        elif type(payload) == str:                                                
+            payload = [ord(s) for s in payload]                            
+                                                                             
+        self.spi.xfer([register | 0x80] + payload)
+        
+du _spi_write il y en a plein pendant la configuration donc ça marche à priori.
+
+je mets du log dans chaque condition... je ne vois que du int je ne le vois pas passer dans str. Je vérifie taille de payload à chaque fois.
+marche pas il veut pas me donner la taille de payload il dit que len(payload) marche pas pour int (marche pour aucun)
+
+print("le payload quon envoie:" + payload) -> juste avant self.spi.xfer([register | 0x80] + payload) me donne:
+
+
+('le payload quon envoie:', [128])
+('le payload quon envoie:', [0])
+('le payload quon envoie:', [0])
+('le payload quon envoie:', [1])
+('le payload quon envoie:', [114])
+('le payload quon envoie:', [116])
+('le payload quon envoie:', [4])
+('le payload quon envoie:', [0])
+('le payload quon envoie:', [8])
+('le payload quon envoie:', [228])
+('le payload quon envoie:', [192])
+('le payload quon envoie:', [0])
+('le payload quon envoie:', [7])
+('le payload quon envoie:', [134])
+('le payload quon envoie:', [7])
+('le payload quon envoie:', [128])
+('le payload quon envoie:', [1])
+('le payload quon envoie:', [255])
+('le payload quon envoie:', [0])
+('le payload quon envoie:', [10, 2, 1, 0, 'H', 'e', 'l', 'l', 'o']) #pour message = Hello bien sûr
+
+donc je suppose que self.spi.xfer() est pas adapté pour les listes de size > 1
+
+donc dans d'autre projets comment ils font? c'est dans python-sx127x/sx127x.py 
+->  ils utilisent xfer2. j'essaie. même erreur
+->j'essaie de ne pas mettre de lettres, que des chiffres -> 
+message = 22 ou message = [10, 20, 30]
+-> fini l'erreur xfer, le payload est alors: [10, 2, 1, 0, 10, 20, 30])
+
+-> je revient à xfer au lieu de xfer2 --> marche aussi
+
+#####Résolution du problem     self.spi.xfer([register | 0x80] + payload) --> TypeError: Non-Int/Long value in arguments: b696e0f8.
+payload = [10, 2, 1, 0, 'H', 'e', 'l', 'l', 'o'] --> passe pas
+payload = [10, 2, 1, 0, 10, 20, 30]) --> passe
+
+adaptation pour que xfer marche (essais sur ordi)
+import spidev
+spi = spidev.SpiDev()
+spi.xfer([0x80] + [10, 20, 'b'])
+
+
+payload = [10, 2, 1, 0, 'H', 'e', 'l', 'l', 'o']
+list(bytearray(payload)) -> [72, 101, 108, 108, 111]
+
+spi.xfer([0x80] + list(bytearray(payload))) ???
+--> j'arrive pas à tester, j'ai plein de initialization failed le soir... comprends pas...
+
+###J'essaie raspi qui Tx vers esp32 qui Rx
+je vois 3 Received sans contenu mais c'est déjà ça!!
+je modifie dans le code esp32 pour afficher la taille de ce qui est reçu et un des elements du buffer: 
+printf("Received: %i payload de taille:%i\n", buf[7], x);
+la taille correspond bien!!
+
+le code sur le rpi:
+
+	#!/bin/python
+	from raspi_lora import LoRa, ModemConfig
+	lora = LoRa(0, 17, 2, modem_config=ModemConfig.Bw125Cr45Sf128, tx_power=14, acks=True)
+	message = [10, 20, 30, 66, 218, 1, 1]
+	status = lora.send_to_wait(message, 10, retries=2)
+	lora.close()
+
+
+
+C'est moche ***MAIS*** il faut que je puisse le refaire dans 6 mois!!!
+-> faire un HowTo, surtout les connexions.
+
+
+Connexions: pour Tx à partir de raspi-lora, si je débranche D0 <-> BCM 17 ça marche quand même: me conforte dans son utilisation
+comme interrupt pour Rx.
+
+###Rx sur le raspi
+je relis le README de raspi-lora
+je vois set_mode_rx(), je vois close()
+déjà j'essaie d'ajouter close() à la fin de mon programme pour que ce soit plus propre
+-> ça marche, c'est plus clean quand même...
+
+j'essaie ensuite RX avec : set_mode_rx()
+
+le programme est alors:
+
+	#!/bin/python
+	from raspi_lora import LoRa, ModemConfig
+	import time
+	import signal
+	import sys
+	
+	def receiveSignal(signalNumber, frame):
+	    print('Received:', signalNumber)
+	    lora.close()
+	    sys.exit()
+	
+	def on_recv(payload):
+	    print("message:", payload)
+	
+	signal.signal(signal.SIGINT, receiveSignal)
+	
+	lora = LoRa(0, 17, 2, modem_config=ModemConfig.Bw125Cr45Sf128, tx_power=14, acks=True)
+	
+	lora.on_recv = on_recv
+	
+	lora.set_mode_rx()
+	
+	while True:
+	    print('Waiting...')
+	    time.sleep(10)
+
+
+avec le task_tx de l'esp32 je vois passer quelque chose dans le debug que j'ai mis dans _spi_write.
+
+
+-> qu'est ce qui déclenche _spi_write? -> remonter
+
+j'essaie de mettre du debug dans raspi-lora/lora.py 
+-> _handle_interrupt() (ligne 228) -> bingo: on y passe à chaque packet sent
+-> dedans on passe dans la condition if self._mode == MODE_RXCONTINUOUS and (irq_flags & RX_DONE):
+-> packet_len = self._spi_read(REG_13_RX_NB_BYTES) -> correspond à 7 dans le code esp32: lora_send_packet((uint8_t*)"bonjour", 7);
+
+
+qu'est ce qui bloque alors?? --> ma théorie: raspi-lora/lora.py @_handle_interrupt() a été désigné dans la partie
+qui commence par "if packet_len >= 4: " pour fonctionner avec une transmission raspi-lora. Ce qui marche pas dans mon cas.
+je propose: self.on_recv(packet)
+
+pour bonjour j'ai:
+('handle interrupt packet_len=', 7)
+('From:', [98, 111, 110, 106, 111, 117, 114])
+
+
