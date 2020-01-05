@@ -2,6 +2,12 @@
 
 NSS = Chip select
 
+
+#ToDo
+-Refaire une install des modules Lora sur esp32 et FT2232H pour voir si ce README est suffisament clair
+-Soudure pâte à souder d'un RFM sur le pcb que je viens de faire: prochain waypoint
+
+
 # Datasheets
 FTDI 2232HL https://www.ftdichip.com/Support/Documents/DataSheets/ICs/DS_FT2232H.pdf
 semtech module Lora https://www.semtech.com/products/wireless-rf/lora-transceivers/sx1276 -> @ datasheet
@@ -37,11 +43,12 @@ Soudure des supports d'antennes (envoyées par Larry) -> j'ai merdé la premièr
 défoncer le fion: y aller FRANCO, pas comme une tarlouze (hummmm)
 
 ##semtech - FT2232H
-voir lora_mpsse.py
+voir lora_mpsse.py -> attention c'est du python2
 
 parler au module lora RFM95 via une puce FTDI 2232H avec la librairie mpsse
 base = https://gitlab.com/the-plant/raspi-lora
 cote esp32 jutilise https://github.com/Inteform/esp32-lora-library
+
 connexions: 
 RFM95			FT2232H (voir dataSheet FT2232H pp 9 et 14 - pour lhistoire output/input)
 
@@ -54,10 +61,11 @@ NB jutilise pas d interrupts donc 4 connexions SPI + l'alim et cest tout!
 
 ##semtech - esp32 
 https://github.com/Inteform/esp32-lora-library (pas évident d'adapter librairies arduino sur esp32)
-cp -af esp32-lora-library/components/lora $ESP-IDF/components/  (tu peux aussi le copier dans ton projet/components je crois)
-les codes pour Tx/Rx sont dans le README.md
+	cp -af esp32-lora-library/components/lora $ESP-IDF/components/  (tu peux aussi le copier dans ton projet/components je crois)
+	les codes pour Tx/Rx sont dans leur README.md
 
-Connexions: config GPIO ça se fait en menuconfig (dans components/lora),
+Connexions:
+config numéros GPIO ça se fait en menuconfig (dans components/lora):
 esp32	RFM95
 -----	-----
 CS		NSS
