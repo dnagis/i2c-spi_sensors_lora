@@ -26,7 +26,7 @@ libmpsse-1.3 (pour SPI).
 
 
 ## pinouts: p.9 DS_FT2232H.pdf correspondance A[D;C]BUS[0;7] et B[D;C]BUS[0;7] (inscriptions dongle) et MPSSE
-###MCP3008:
+### MCP3008:
 AD1 (TDI/DO = OUTPUT cf p.14 de la DS) sur DIN du mcp3008
 AD2 (TDO/DI) sur DOUT du mcp3008
 AD3 (CS) et AD0 (CLK) pas de pb
@@ -42,7 +42,7 @@ Soudure des supports d'antennes (envoyées par Larry) -> j'ai merdé la premièr
 2) flux à l'extrémité des picots cuivre 3) mini boule au bout de la panne à appliquer direct avec la panne (pas l'étaim direct) 4) pour avoir une panne préétamée au bout: la gratounette en cuivre: lui
 défoncer le fion: y aller FRANCO, pas comme une tarlouze (hummmm)
 
-##semtech - FT2232H
+## semtech - FT2232H
 voir lora_mpsse.py -> attention c'est du python2
 
 parler au module lora RFM95 via une puce FTDI 2232H avec la librairie mpsse
@@ -59,7 +59,7 @@ CS/NSS 			AD3
 
 NB jutilise pas d interrupts donc 4 connexions SPI + l'alim et cest tout!
 
-##semtech - esp32 
+## semtech - esp32 
 https://github.com/Inteform/esp32-lora-library (pas évident d'adapter librairies arduino sur esp32)
 	cp -af esp32-lora-library/components/lora $ESP-IDF/components/  (tu peux aussi le copier dans ton projet/components je crois)
 	les codes pour Tx/Rx sont dans leur README.md
@@ -77,15 +77,15 @@ RST		RST //pas obligatoire
 Ne pas oublier d'alimenter le module en 3v3! 
 
 
-##rpi / python2
+## semtech - rpi 
+https://gitlab.com/the-plant/raspi-lora
+python2 (ils disent python3 only mais pas vrai...)
 il faut modprobe spidev et spi-bcm2835
 il faut les librairies python spidev et RPi.GPIO -> un peu chiant (libpython2.7) voir rpi->python
-semtech: j'utilise le projet https://gitlab.com/the-plant/raspi-lora
--> ils disent python3 only mais pas vrai..
 -> install = cp le raspi_lora/ qui contient __init__.py dans site-packages/ 
 -> voir ci joint rpi_lora.py
 
-###pinout rpi
+Connexions:
 Rpi	(pinout.xyz)					RFM95
 -----								-----
 BCM8 (CE0)							NSS
