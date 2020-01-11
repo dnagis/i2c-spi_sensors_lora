@@ -1,11 +1,18 @@
 # Spi Lora mcp3008 FT2232H 
 
 NSS = Chip select
+RST pas obligatoire pour fonctionnement de base
+ne jamais alimenter un module LoRa qui n'a pas d'antenne branchée
 
 
 #ToDo
 -Refaire une install des modules Lora sur esp32 et FT2232H pour voir si ce README est suffisament clair
--Soudure pâte à souder d'un RFM sur le pcb que je viens de faire: prochain waypoint
+	--> pb python esp32 à régler
+	--> garder les tarball libftdi et libmpsse qq part ils sont précieux +++
+	
+-Le PCB pour RFM95 designé en décembre fonctionne
+	
+
 
 
 # Datasheets
@@ -38,13 +45,20 @@ AD3 (CS) et AD0 (CLK) pas de pb
 
 # Lora puces semtech 
 
-Première commande: RFM95W achetés en 2019 (Kloug's) chez Aliexpress -> Semtech SX1276/77/78/79 based boards. Puces reçues: A l'arrière: 868Mhz coché. Et RFM95 coché
-Les breakout boards LoRa chez Tindie, reste à commander les supports d'antenne, l'antenne dépend de la fréquence (attention à l'achat)
-voir le projet partagé klougien sur gitlab "LORA - Node to Node"
+-Commandes: 
+Aliexpress novembre 19
+	RFM95 RFM95W 868 915 RFM95-868MHz RFM95-915MHz LORA SX1276 (A l'arrière: 868Mhz coché) -> Choisir 868MHz (France)
+	Connecteur antenne: SMA connecteur Jack femelle pour 1.6mm bord de soudure PCB montage droit plaqué or connecteurs RF prise de soudure
+	Antennes: 5 pièces/lot mini caoutchouc 868 MHz antennes, antenne 868 MHz ISM Terminal SMA (M)
+PCB easyEDA de décembre 2019 pour RFM95
 
-Soudure des supports d'antennes (envoyées par Larry) -> j'ai merdé la première, la deuxième nickel. Technique: 1) Prochaine fois souder les picots sur la breakout APRES avoir soudé l'antenne, 
-2) flux à l'extrémité des picots cuivre 3) mini boule au bout de la panne à appliquer direct avec la panne (pas l'étaim direct) 4) pour avoir une panne préétamée au bout: la gratounette en cuivre: lui
-défoncer le fion: y aller FRANCO, pas comme une tarlouze (hummmm)
+Première commande: 2019 (Kloug's) chez Aliexpress -> Semtech SX1276/77/78/79 based boards + breakout boards LoRa chez Tindie (cf projet partagé klougien sur gitlab "LORA - Node to Node")
+
+-Soudure
+1) module 2) antenne 3) pinouts
+RFM95 -> si merdé à la pâte, possible de faire au fer à souder classique: réussi au moins une fois en janvier 2020. 
+support d'antennes: flux + mini boule au bout de la panne à appliquer direct avec la panne (pas l'étaim direct) (bien passer la panne dans la gratounette pour qu'elle accroche l'étaim).
+
 
 ## semtech - FT2232H
 voir lora_mpsse.py -> attention c'est du python2
@@ -54,7 +68,7 @@ base = https://gitlab.com/the-plant/raspi-lora
 cote esp32 jutilise https://github.com/Inteform/esp32-lora-library
 
 connexions: 
-RFM95			FT2232H (voir dataSheet FT2232H pp 9 et 14 - pour lhistoire output/input)
+RFM95			FT2232H (voir dataSheet FT2232H pp 9 et 14 - pour l'histoire output/input)
 
 SCK				AD0
 MO  			AD1 = OUTPUT (TDI/DO) 

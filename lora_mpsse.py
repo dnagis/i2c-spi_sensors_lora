@@ -92,7 +92,7 @@ spi_write_one(0x12 , 0xff) #REG_12_IRQ_FLAGS clear ses flags
 
 
 ###Tx 
-payload='hello sri lanka...'
+payload='hello 84...'
 spi_write_one(0x0d , 0x00) #REG_0D_FIFO_ADDR_PTR
 spi.Start()
 spi.Write('\x80'+payload) #premier byte = 0x00 | 0x80 cf p.80
