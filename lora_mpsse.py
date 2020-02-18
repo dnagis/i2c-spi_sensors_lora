@@ -6,7 +6,7 @@ from time import sleep
 FXOSC = 32000000.0
 FSTEP = (FXOSC / 524288)
 
-frf = 915 #frequ en MHz
+frf = 868 #frequ en MHz
 
 
 
@@ -83,7 +83,7 @@ spi_write_one(0x12 , 0xff) #REG_12_IRQ_FLAGS clear ses flags
 ###Rx => lecture IRQ flags toutes les secondes dans un loop
 
 spi_write_one(0x01 , 0x05) #mode RxContinuous
-for x in range(10):
+while True:
 	print("IRQ FLAGS:"+bin(ord(spi_read_one(0x12))))  #REG_12_IRQ_FLAGS
 	if(ord(spi_read_one(0x12)) & 0x40): # RX_DONE flag is up!
 		lecture_rx()
