@@ -2,6 +2,7 @@
 
 from mpsse import *
 from time import sleep
+import datetime
 
 FXOSC = 32000000.0
 FSTEP = (FXOSC / 524288)
@@ -25,6 +26,11 @@ def spi_read_one(register):
 	resp = spi.Transfer(str(CMD))	
 	spi.Stop()
 	return resp[1]
+	
+def deal_with_rx_string(rx_string):
+	current_time = datetime.datetime.now() 
+	print(current_time)
+	print(rx_string)
 
 def lecture_rx():
 	rx_len = spi_read_one(0x13)#REG_13_RX_NB_BYTES -> taille du packet recu
@@ -37,7 +43,7 @@ def lecture_rx():
 	resp = spi.Transfer(str(CMD))
 	spi.Stop()
 	rx_string = resp[1:] #Enlever le premier byte (il servait au transfer seulement)
-	print(rx_string)
+	deal_with_rx_string(rx_string)
 	
 
 
