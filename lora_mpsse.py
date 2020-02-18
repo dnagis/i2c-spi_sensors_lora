@@ -82,26 +82,26 @@ spi_write_one(0x12 , 0xff) #REG_12_IRQ_FLAGS clear ses flags
 
 ###Rx => lecture IRQ flags toutes les secondes dans un loop
 
-#spi_write_one(0x01 , 0x05) #mode RxContinuous
-#for x in range(10):
-#	print("IRQ FLAGS:"+bin(ord(spi_read_one(0x12))))  #REG_12_IRQ_FLAGS
-#	if(ord(spi_read_one(0x12)) & 0x40): # RX_DONE flag is up!
-#		lecture_rx()
-#	sleep(1)
+spi_write_one(0x01 , 0x05) #mode RxContinuous
+for x in range(10):
+	print("IRQ FLAGS:"+bin(ord(spi_read_one(0x12))))  #REG_12_IRQ_FLAGS
+	if(ord(spi_read_one(0x12)) & 0x40): # RX_DONE flag is up!
+		lecture_rx()
+	sleep(1)
 
 
 
 ###Tx 
-payload='hello 84...'
-spi_write_one(0x0d , 0x00) #REG_0D_FIFO_ADDR_PTR
-spi.Start()
-spi.Write('\x80'+payload) #premier byte = 0x00 | 0x80 cf p.80
-spi.Stop()
-spi_write_one(0x22 , len(payload)) #REG_22_PAYLOAD_LENGTH
-spi_write_one(0x01 , 0x03) #mode Tx
-sleep(1) #histoire dattendre que le Tx se fasse
+#payload='hello 84...'
+#spi_write_one(0x0d , 0x00) #REG_0D_FIFO_ADDR_PTR
+#spi.Start()
+#spi.Write('\x80'+payload) #premier byte = 0x00 | 0x80 cf p.80
+#spi.Stop()
+#spi_write_one(0x22 , len(payload)) #REG_22_PAYLOAD_LENGTH
+#spi_write_one(0x01 , 0x03) #mode Tx
+#sleep(1) #histoire dattendre que le Tx se fasse
 
-spi_write_one(0x01 , 0x01) #revenir en mode STDBY (0x01) (En Tx dapres datasheet p.36 devrait se faire seul)
+#spi_write_one(0x01 , 0x01) #revenir en mode STDBY (0x01) (En Tx dapres datasheet p.36 devrait se faire seul)
 
 		
 spi.Close()		

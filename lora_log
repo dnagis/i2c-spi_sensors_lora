@@ -1,3 +1,5 @@
+***Premier fichier de log qui date du début du travail dans spi/lora sur le rpi puis sur le NUC***
+
 scp /initrd/mnt/dev_save/packages/lora/lora_log ks:/home/lora/
 
 ####Second passage (091219) : du SPI en USB pour connexion RFM95 Lora sur un ordi (qui n'a pas de GPIO)

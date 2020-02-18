@@ -4,20 +4,21 @@ NSS = Chip select
 RST pas obligatoire pour fonctionnement de base
 ne jamais alimenter un module LoRa qui n'a pas d'antenne branchée
 
-
-#ToDo
--Refaire une install des modules Lora sur esp32 et FT2232H pour voir si ce README est suffisament clair
-	--> pb python esp32 à régler
-	--> garder les tarball libftdi et libmpsse qq part ils sont précieux +++
-	
--Le PCB pour RFM95 designé en décembre fonctionne
-	
-
-
-
 # Datasheets
 FTDI 2232HL https://www.ftdichip.com/Support/Documents/DataSheets/ICs/DS_FT2232H.pdf
 semtech module Lora https://www.semtech.com/products/wireless-rf/lora-transceivers/sx1276 -> @ datasheet
+
+
+#ToDo
+-Refaire une install des modules Lora sur esp32 et FT2232H pour voir si ce README est suffisament clair
+-Garder les tarball libftdi et libmpsse qq part ils sont précieux +++
+	
+
+	
+
+
+
+
 
 
 # FTDI puce FT2232 (gros breakout violet)
