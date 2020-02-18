@@ -52,8 +52,8 @@ def lecture_rx():
 spi_write_one(0x01 , 0x80) #0x01 = REG_01_OP_MODE -> 0b10000000 -> long range mode (LoRa) (p 108 )
 sleep(0.1)
 
-#spi_write_one(0x0f , 0x00) #REG_0F_FIFO_RX_BASE_ADDR --> p.35. tte la memory FIFO assignee au Rx
-spi_write_one(0x0e , 0x00) #REG_0F_FIFO_TX_BASE_ADDR --> p.35. tte la memory FIFO assignee au Tx
+spi_write_one(0x0f , 0x00) #REG_0F_FIFO_RX_BASE_ADDR --> p.35. tte la memory FIFO assignee au Rx
+#spi_write_one(0x0e , 0x00) #REG_0F_FIFO_TX_BASE_ADDR --> p.35. tte la memory FIFO assignee au Tx
 sleep(0.1)
 
 spi_write_one(0x01 , 0x01) #mode STDBY (p108)
@@ -90,9 +90,10 @@ spi_write_one(0x12 , 0xff) #REG_12_IRQ_FLAGS clear ses flags
 
 spi_write_one(0x01 , 0x05) #mode RxContinuous
 while True:
-	print("IRQ FLAGS:"+bin(ord(spi_read_one(0x12))))  #REG_12_IRQ_FLAGS
+	#print("IRQ FLAGS:"+bin(ord(spi_read_one(0x12))))  #REG_12_IRQ_FLAGS
 	if(ord(spi_read_one(0x12)) & 0x40): # RX_DONE flag is up!
 		lecture_rx()
+		spi_write_one(0x12 , 0xff) #REG_12_IRQ_FLAGS clear ses flags
 	sleep(1)
 
 
