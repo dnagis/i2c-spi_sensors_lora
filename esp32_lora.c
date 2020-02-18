@@ -5,13 +5,14 @@
 
 uint8_t buf[32];
 char string2send[20];
+int i = 0;
 
 void task_tx(void *p)
 {
    printf("task_tx avant boucle\n");
-   for(int i = 0; i < 1000; i++) {
+   for(;;) {
       vTaskDelay(5000 / portTICK_PERIOD_MS);
-
+	  i++;	
       sprintf(string2send, "vvnx %d", i);
       
       
@@ -20,7 +21,7 @@ void task_tx(void *p)
       lora_send_packet((uint8_t*)string2send, 20);
       
       
-      printf("packet sent...\n");
+      printf("packet sent: %s\n", string2send);
    }
 }
 
