@@ -17,6 +17,9 @@ def receiveSignal(signalNumber, frame):
 def on_recv(payload):
     current_time = str(datetime.datetime.now())
     print("message recu:" + str(bytearray(payload)) + " @ " + current_time)
+    f = open("log_lora", "a")
+    f.write(str(bytearray(payload)) + " @ " + current_time + "\n")
+    f.close()
 
 signal.signal(signal.SIGINT, receiveSignal)
 
