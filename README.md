@@ -103,6 +103,7 @@ il faut modprobe spidev et spi-bcm2835
 il faut les librairies python spidev et RPi.GPIO -> un peu chiant (libpython2.7) voir rpi->python
 -> install = cp le raspi_lora/ qui contient __init__.py dans site-packages/ 
 -> voir ci joint rpi_lora.py
+-> /lib/python2.7/site-packages/raspi_lora/lora.py est là où tout se passe. nb il m'est déjà arrivé d'y bidouiller des trucs dans _spi_write() et d'oublier de les enlever
 
 Connexions:
 Rpi	(pinout.xyz)					RFM95
@@ -111,7 +112,7 @@ BCM8 (CE0)							NSS
 BCM9 (MISO)							MI
 BCM10 (MOSI)						MO
 BCM11 (SCLK)						SCK
-BCM17 (configurable dans le code)	D0
+BCM17 (configurable dans le code)	D0	#Attention il **faut** le mettre pour le rpi (alors qu'esp32 pas obligatoire)
 
 
 
