@@ -1,6 +1,7 @@
 #!/bin/python
 from raspi_lora import LoRa, ModemConfig
 import time
+import datetime
 import signal
 import sys
 
@@ -14,7 +15,8 @@ def receiveSignal(signalNumber, frame):
     sys.exit()
     
 def on_recv(payload):
-    print("message recu:", payload)
+    current_time = str(datetime.datetime.now())
+    print("message recu:" + str(bytearray(payload)) + " @ " + current_time)
 
 signal.signal(signal.SIGINT, receiveSignal)
 
