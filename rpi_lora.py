@@ -23,7 +23,7 @@ def on_recv(payload):
 
 signal.signal(signal.SIGINT, receiveSignal)
 
-lora = LoRa(0, 17, 2,  freq=868, modem_config=ModemConfig.Bw125Cr45Sf128, tx_power=14, acks=True)
+lora = LoRa(0, 7, 2,  freq=868, modem_config=ModemConfig.Bw125Cr45Sf128, tx_power=14, acks=True)
 lora.on_recv = on_recv 
 lora.set_mode_rx()
 
