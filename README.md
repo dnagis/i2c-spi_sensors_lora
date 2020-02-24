@@ -102,8 +102,16 @@ python2 (ils disent python3 only mais pas vrai...)
 il faut modprobe spidev et spi-bcm2835
 il faut les librairies python spidev et RPi.GPIO -> un peu chiant (libpython2.7) voir rpi->python
 -> install = cp le raspi_lora/ qui contient __init__.py dans site-packages/ 
--> voir ci joint rpi_lora.py
+-> un truc que j'ai pas eu au départ: chelou: 
+ raspi_lora/lora.py ligne 57
+ # set modem config (Bw125Cr45Sf128)                                                      
+        self._spi_write(REG_1D_MODEM_CONFIG1, self._modem_config.value[0]) --> AttributeError: 'tuple' object has no attribute 'value
+		self._spi_write(REG_1D_MODEM_CONFIG1, self._modem_config[0]) --> OK
+-> code pour appeler: ci joint rpi_lora.py
 -> /lib/python2.7/site-packages/raspi_lora/lora.py est là où tout se passe. nb il m'est déjà arrivé d'y bidouiller des trucs dans _spi_write() et d'oublier de les enlever
+
+        
+
 
 Connexions:
 Rpi	(pinout.xyz)					RFM95
