@@ -1,4 +1,4 @@
-# Spi Lora mcp3008 FT2232H 
+ # Spi Lora mcp3008 FT2232H 
 
 NSS = Chip select
 RST pas obligatoire pour fonctionnement de base
