@@ -50,7 +50,7 @@ AD3 (CS) et AD0 (CLK) pas de pb
 
 -Commandes: 
 Aliexpress novembre 19
-	RFM95 RFM95W 868 915 RFM95-868MHz RFM95-915MHz LORA SX1276 (A l'arrière: 868Mhz coché) -> Choisir 868MHz (France)
+	RFM95 RFM95W 868 915 RFM95-868MHz RFM95-915MHz LoRa SX1276 (A l'arrière: 868Mhz coché) -> Choisir 868MHz (France)
 	Connecteur antenne: SMA connecteur Jack femelle pour 1.6mm bord de soudure PCB montage droit plaqué or connecteurs RF prise de soudure
 	Antennes: 5 pièces/lot mini caoutchouc 868 MHz antennes, antenne 868 MHz ISM Terminal SMA (M)
 PCB easyEDA de décembre 2019 pour RFM95
@@ -80,27 +80,23 @@ CS/NSS 			AD3
 
 NB jutilise pas d interrupts donc 4 connexions SPI + l'alim et cest tout!
 
-## semtech - esp32 
+## Lora SX1276 - esp32 
 https://github.com/Inteform/esp32-lora-library (pas évident d'adapter librairies arduino sur esp32)
 	cp -af esp32-lora-library/components/lora $ESP-IDF/components/  (tu peux aussi le copier dans ton projet/components je crois)
 	les codes pour Tx/Rx sont dans leur README.md
 
 Connexions:
-config numéros GPIO ça se fait en menuconfig (dans components/lora) MAIS il faut noter ce qui a marché au moins une fois pour les moments de solitude
-tableau: 
-config = menuconfig esp32	
-espPins = esp32 pin a marché au moins une fois 
-RFM95
+config numéros GPIO ça se fait en menuconfig (dans components/lora) 
+tableau (ce qui a marché au moins une fois en pins sur l'esp32 pour éviter les moments de solitude): 
 
-config	espPins	RFM95
------			-----
-CS		32		NSS
-MISO	21		MI
-MOSI	19		MO
-SCK		33		SCK
-RST				RST //pas obligatoire
+RFM95		NSS	SCK	MI	MO RST //pas obligatoire
+esp32		32	33	21	19
+esp32(alt)	23	22	21	19
+esp32(alt)	32	33	27	14
+esp32(alt)	25	26	27	14 
+esp32(alt)	32	33	25	26
 
-Ne pas oublier d'alimenter le module en 3v3! 
+Ne pas oublier d'alimenter le module LoRa SX1276 en 3v3! 
 
 
 ## semtech - rpi 
