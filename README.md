@@ -96,6 +96,8 @@ esp32(alt)	32	33	27	14
 esp32(alt)	25	26	27	14 
 esp32(alt)	32	33	25	26
 
+oublier 34 et 35 sur l'esp pour SPI, que ce soit pour NSS SCK, MI ou MO
+
 Ne pas oublier d'alimenter le module LoRa SX1276 en 3v3! 
 
 
