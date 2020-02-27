@@ -1,8 +1,9 @@
- # Spi Lora mcp3008 FT2232H 
+# Spi Lora mcp3008 FT2232H 
 
 NSS = Chip select
 RST pas obligatoire pour fonctionnement de base
 ne jamais alimenter un module LoRa qui n'a pas d'antenne branchée
+"LoRa" je crois stands for "Long Range" (datasheet semtech p 35)
 
 # Datasheets
 FTDI 2232HL https://www.ftdichip.com/Support/Documents/DataSheets/ICs/DS_FT2232H.pdf
@@ -10,8 +11,8 @@ semtech module Lora https://www.semtech.com/products/wireless-rf/lora-transceive
 
 
 #ToDo
--Refaire une install des modules Lora sur esp32 et FT2232H pour voir si ce README est suffisament clair
--Garder les tarball libftdi et libmpsse qq part ils sont précieux +++
+-Demystifier pourquoi des fois dans un nouveau système (une nouvelle install) ça marche pas out of the box
+-Garder les tarball libftdi et libmpsse qq part sur kimsufi ils sont précieux +++
 	
 
 	
@@ -35,14 +36,15 @@ libmpsse-1.3 (pour SPI)
 	CFLAGS=-I/usr/include/libftdi1 ./configure --prefix=/usr --libdir=/usr/lib64
 	builder les exemples dans libmpsse: CFLAGS=-I/usr/include/libftdi1 CC=gcc make
 
-
-
 ## pinouts: p.9 DS_FT2232H.pdf correspondance A[D;C]BUS[0;7] et B[D;C]BUS[0;7] (inscriptions dongle) et MPSSE
 ### MCP3008:
 AD1 (TDI/DO = OUTPUT cf p.14 de la DS) sur DIN du mcp3008
 AD2 (TDO/DI) sur DOUT du mcp3008
 AD3 (CS) et AD0 (CLK) pas de pb
 ****Ne pas oublier d alimenter le mcp3008!!!!****
+
+
+
 
 # Lora puces semtech 
 
@@ -84,20 +86,25 @@ https://github.com/Inteform/esp32-lora-library (pas évident d'adapter librairie
 	les codes pour Tx/Rx sont dans leur README.md
 
 Connexions:
-config numéros GPIO ça se fait en menuconfig (dans components/lora):
-esp32	RFM95
------	-----
-CS		NSS
-MISO	MI
-MOSI	MO
-SCK		SCK
-RST		RST //pas obligatoire
+config numéros GPIO ça se fait en menuconfig (dans components/lora) MAIS il faut noter ce qui a marché au moins une fois pour les moments de solitude
+tableau: 
+config = menuconfig esp32	
+espPins = esp32 pin a marché au moins une fois 
+RFM95
+
+config	espPins	RFM95
+-----			-----
+CS		32		NSS
+MISO	21		MI
+MOSI	19		MO
+SCK		33		SCK
+RST				RST //pas obligatoire
 
 Ne pas oublier d'alimenter le module en 3v3! 
 
 
 ## semtech - rpi 
-https://gitlab.com/the-plant/raspi-lora
+https://gitlab.com/the-plant/raspi-lora -> NB je n'ai pas à bricoler dans la librairie!
 python2 (ils disent python3 only mais pas vrai...)
 il faut modprobe spidev et spi-bcm2835
 il faut les librairies python spidev et RPi.GPIO -> un peu chiant (libpython2.7) voir rpi->python
@@ -123,6 +130,10 @@ BCM11 (SCLK)						SCK
 BCM17 (configurable dans le code)	D0	#Attention il **faut** le mettre pour le rpi (alors qu'esp32 pas obligatoire)
 
 
+
+## moments de solitude
+J'ai déjà eu des non fonctionnements qui ont été résolu peu de temps après que je modifie la fréquence (915 -> 868, et vice et versa) sur l'émetteur et sur le 
+récepteur, sans que je comprenne pourquoi
 
 
 
