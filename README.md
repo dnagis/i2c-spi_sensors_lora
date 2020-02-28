@@ -85,8 +85,9 @@ https://github.com/Inteform/esp32-lora-library (pas évident d'adapter librairie
 	cp -af esp32-lora-library/components/lora $ESP-IDF/components/  (tu peux aussi le copier dans ton projet/components je crois)
 	les codes pour Tx/Rx sont dans leur README.md
 
-Connexions:
+Connexions: *********ATTENTION PINS ESP32 ET LORA: RISQUE DE MOMENTS DE SOLITUDE+++++***********
 config numéros GPIO ça se fait en menuconfig (dans components/lora) 
+
 tableau (ce qui a marché au moins une fois en pins sur l'esp32 pour éviter les moments de solitude): 
 
 RFM95		NSS	SCK	MI	MO RST //pas obligatoire
@@ -97,6 +98,7 @@ esp32(alt)	25	26	27	14
 esp32(alt)	32	33	25	26
 
 oublier 34 et 35 sur l'esp pour SPI, que ce soit pour NSS SCK, MI ou MO
+RST à 1 donne un comportement très misleading: bloquage dans le bootup causé par lora_init() et on ne voit même pas un printf() avant!
 
 Ne pas oublier d'alimenter le module LoRa SX1276 en 3v3! 
 
