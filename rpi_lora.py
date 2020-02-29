@@ -8,6 +8,7 @@ import sys
 #Rx: _handle_interrupt() -> packet est Rx ici. ajouter un self.on_recv(packet) dans le premier if dès que le packet est récupéré
 #Tx: _spi_write() -> self.spi.xfer([register | 0x80] + payload) marche si payload = [10, 2, 1, 0, 10, 20, 30], pas si [10, 2, 1, 0, 'H', 'e', 'l', 'l', 'o']
 #error: Non-Int/Long value in arguments: 7a0315a8 -> faut faire la conversion des lettres en ascii, j'ai pas fait encore (spi.xfer([0x80] + list(bytearray(payload)))???)
+#lecture du fichier de log: file -i log_lora --> cat log_lora | tr -d '\0' > log_text
 
 def receiveSignal(signalNumber, frame):
     print('Received:', signalNumber)
