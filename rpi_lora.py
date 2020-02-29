@@ -32,7 +32,8 @@ while True:
     time.sleep(10)
     
 #Tx:    
-#message = [10, 20, 30, 66, 218, 1, 1] #message = "Hello"	
+#jai pas beaucoup avance niveau Tx.  
+#message = [10, 20, 30, 66, 218, 1, 1] #pour message = "Hello", nb donne au Rx: [10, 2, 1, 0, 'H', 'e', 'l', 'l', 'o']. les 4 premiers bytes sont constants
 #status = lora.send_to_wait(message, 10, retries=2)
 #lora.close()    
 

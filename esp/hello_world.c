@@ -32,8 +32,8 @@ void task_rx(void *p)
       lora_receive();    // put into receive mode
       while(lora_received()) {
          x = lora_receive_packet(buf, sizeof(buf));
-         buf[x] = 0;
-         printf("Received: %s\n", buf);
+         //avec raspi-lora qui Tx, je n'ai pas beaucoup avancé. -> j'affiche un byte. (les 4 premiers non controlables: toujours 10, 2, 1, 0
+         printf("Received: %i payload de taille:%i\n", buf[5], x); 
          lora_receive();
       }
       vTaskDelay(1);
