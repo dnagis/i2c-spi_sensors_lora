@@ -4,11 +4,14 @@ import time
 import datetime
 import signal
 import sys
+import sqlite3
 
-#Rx: _handle_interrupt() -> packet est Rx ici. ajouter un self.on_recv(packet) dans le premier if dès que le packet est récupéré
+#Rx: _handle_interrupt() -> packet est Rx ici. ajouter un self.on_recv(packet) dans le premier if des que le packet est recupere
 #Tx: _spi_write() -> self.spi.xfer([register | 0x80] + payload) marche si payload = [10, 2, 1, 0, 10, 20, 30], pas si [10, 2, 1, 0, 'H', 'e', 'l', 'l', 'o']
-#error: Non-Int/Long value in arguments: 7a0315a8 -> faut faire la conversion des lettres en ascii, j'ai pas fait encore (spi.xfer([0x80] + list(bytearray(payload)))???)
-#lecture du fichier de log: file -i log_lora --> cat log_lora | tr -d '\0' > log_text
+#	error: Non-Int/Long value in arguments: 7a0315a8 -> faut faire la conversion des lettres en ascii, j'ai pas fait encore (spi.xfer([0x80] + list(bytearray(payload)))???)
+
+
+db_file='/root/lora.db' #CREATE TABLE data(epoch INT, payload TEXT);
 
 def receiveSignal(signalNumber, frame):
     print('Received:', signalNumber)
@@ -16,11 +19,13 @@ def receiveSignal(signalNumber, frame):
     sys.exit()
     
 def on_recv(payload):
-    current_time = str(datetime.datetime.now())
-    print("message recu:" + str(bytearray(payload)) + " @ " + current_time)
-    f = open("log_lora", "a")
-    f.write(str(bytearray(payload)) + " @ " + current_time + "\n")
-    f.close()
+    print("message recu:" + str(bytearray(payload)) + " @ " + str(datetime.datetime.now()))
+    new_data = [int(time.time()), str(bytearray(payload))]
+    conn = sqlite3.connect(db_file)
+    c = conn.cursor()
+    c.execute("insert into data (epoch, payload) values (?, ?);", new_data);
+    conn.commit()
+    conn.close()
 
 signal.signal(signal.SIGINT, receiveSignal)
 
@@ -33,9 +38,9 @@ while True:
     time.sleep(10)
     
 #Tx:    
-#jai pas beaucoup avance niveau Tx.  
-#message = [10, 20, 30, 66, 218, 1, 1] #pour message = "Hello", nb donne au Rx: [10, 2, 1, 0, 'H', 'e', 'l', 'l', 'o']. les 4 premiers bytes sont constants
-#status = lora.send_to_wait(message, 10, retries=2)
+#message = [10, 20, 30, 66, 218, 1, 1] #message = "Hello"	
+#message = "Hello"
+#status = lora.send_to_wait(message, 10, retries=0)
 #lora.close()    
 
 
