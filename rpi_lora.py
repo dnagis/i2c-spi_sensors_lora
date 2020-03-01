@@ -19,8 +19,11 @@ def receiveSignal(signalNumber, frame):
     sys.exit()
     
 def on_recv(payload):
-    print("message recu:" + str(bytearray(payload)) + " @ " + str(datetime.datetime.now()))
-    new_data = [int(time.time()), str(bytearray(payload))]
+    #print("message recu:" + str(bytearray(payload)) + " @ " + str(datetime.datetime.now()))
+    count = payload[1] + (payload[0] << 8) #encodage dun int dans 2 bytes (anemo)
+    print("recu count=" + str(count)) 
+    new_data = [int(time.time()), count]
+    #select payload, datetime(epoch, 'unixepoch','localtime') from data;    
     conn = sqlite3.connect(db_file)
     c = conn.cursor()
     c.execute("insert into data (epoch, payload) values (?, ?);", new_data);
