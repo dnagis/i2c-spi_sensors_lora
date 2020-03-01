@@ -6,6 +6,7 @@
  * 
  * 
  * 
+ * 
  */
 
 #include <stdio.h>
@@ -17,13 +18,13 @@
 #include "driver/gpio.h"
 
 //Lecture GPIO (anémo)
-#define GPIO_INPUT_IO_0     14
+#define GPIO_INPUT_IO_0     23
 #define GPIO_INPUT_IO_1     5 //on s'en sert pas, je laisse au cas où tu veuilles plusieurs GPIO, mask ci dessous, pour exple)
 #define GPIO_INPUT_PIN_SEL  ((1ULL<<GPIO_INPUT_IO_0) | (1ULL<<GPIO_INPUT_IO_1))
 #define ESP_INTR_FLAG_DEFAULT 0
 
 uint8_t buf[32];
-char string2send[20];
+char string2send[2];
 int intrpt_cnt;
 
 //readGPIO
@@ -51,13 +52,15 @@ void task_tx(void *p)
 {
    printf("task_tx avant boucle\n");
    for(;;) {
-      vTaskDelay(5000 / portTICK_PERIOD_MS);
+      vTaskDelay(20000 / portTICK_PERIOD_MS);
 	  
-      sprintf(string2send, "vvnx %d", intrpt_cnt);      
+      //sprintf(string2send, "vvnx %d", intrpt_cnt); 
+      string2send[0] = (int)((intrpt_cnt >> 8) & 0xff);
+      string2send[1] = (int)(intrpt_cnt & 0xff);
       
-      lora_send_packet((uint8_t*)string2send, 20);      
+      lora_send_packet((uint8_t*)string2send, 2);      
       
-      printf("packet sent: %s\n", string2send);
+      printf("count = %i, bytes sent: %02x - %02x\n", intrpt_cnt, string2send[0], string2send[1]);
       
       intrpt_cnt=0;//remise à zero du compteur
    }
