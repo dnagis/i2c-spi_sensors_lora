@@ -3,13 +3,11 @@
 <head>
 <title>LoRa Data</title>
 
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
 
-
-
-
 <script src="data.js"></script>
+
 <script>
 	
 	
@@ -22,16 +20,19 @@ window.onload= function() {
 	            //pour scatter il faut retourner un array d'objets points x,y type: [{x:n,y:n},{x:n,y:n},...]
 	            data: lora_array.map(item => { 
 				  var rObj = {x:null,y:null};
-				  rObj.x = item.epoch; 
+				  rObj.x = item.epoch*1000; 
 				  rObj.y = item.payload; 
 				  return rObj;
 				})		            
 	        }]
 	    },
-	    options: {	
-			
-		}
-	
+	    options: {				
+			scales: {
+	            xAxes: [{
+	                type: 'time',
+	            }],
+	        }			
+		}	
 	});
 };
 </script>

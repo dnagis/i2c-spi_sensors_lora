@@ -24,7 +24,8 @@ length = len(rows)
 
 for i in range(length):
 	featureDict = {"epoch":rows[i][0],"payload":int(rows[i][1])}
-	lora_array.append(featureDict)
+	if int(rows[i][1]) < 5000:
+		lora_array.append(featureDict)
 	
 outputfile = open("data.js", "w+") 
 outputfile.write("lora_array ="+str(lora_array)+"\n")
