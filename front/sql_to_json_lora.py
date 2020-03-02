@@ -9,7 +9,7 @@ import sys
 
 db_file=str(sys.argv[1])
 
-ma_requete = 'SELECT * from data where epoch > 1583073102 and epoch < 1583080115'
+ma_requete = 'SELECT * from data'
 
 conn = sqlite3.connect(db_file)
 cur = conn.cursor()
