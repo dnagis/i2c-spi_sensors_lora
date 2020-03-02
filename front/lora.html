@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>LoRa Data</title>
+
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
+
+
+
+
+<script src="data.js"></script>
+<script>
+	
+	
+window.onload= function() {
+	var ctx = document.getElementById('myChart').getContext('2d');
+	var myChart = new Chart(ctx, {
+	    type: 'scatter',
+	    data: {
+	        datasets: [{
+	            //pour scatter il faut retourner un array d'objets points x,y type: [{x:n,y:n},{x:n,y:n},...]
+	            data: lora_array.map(item => { 
+				  var rObj = {x:null,y:null};
+				  rObj.x = item.epoch; 
+				  rObj.y = item.payload; 
+				  return rObj;
+				})		            
+	        }]
+	    },
+	    options: {	
+			
+		}
+	
+	});
+};
+</script>
+
+
+</head>
+<body>
+	
+<canvas id="myChart"></canvas>
+
+
+
+</body>
+</html>
