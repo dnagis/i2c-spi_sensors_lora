@@ -1,7 +1,7 @@
 # Spi Lora mcp3008 FT2232H 
 
 NSS = Chip select
-RST pas obligatoire pour fonctionnement de base
+RST pas obligatoire pour fonctionnement de base avec l'esp32.
 ne jamais alimenter un module LoRa qui n'a pas d'antenne branchée
 "LoRa" je crois stands for "Long Range" (datasheet semtech p 35)
 
@@ -11,7 +11,8 @@ semtech module Lora https://www.semtech.com/products/wireless-rf/lora-transceive
 
 
 #ToDo
--Demystifier pourquoi des fois dans un nouveau système (une nouvelle install) ça marche pas out of the box
+-Demystifier pourquoi des fois dans un nouveau système (une nouvelle install) ça marche pas out of the box: pquoi des fois bricolage de la fréquence fait
+	fonctionner...
 -Garder les tarball libftdi et libmpsse qq part sur kimsufi ils sont précieux +++
 	
 
@@ -87,6 +88,12 @@ https://github.com/Inteform/esp32-lora-library (pas évident d'adapter librairie
 
 Connexions: *********ATTENTION PINS ESP32 ET LORA: RISQUE DE MOMENTS DE SOLITUDE+++++***********
 config numéros GPIO ça se fait en menuconfig (dans components/lora) 
+Le PCB que je design mars 2020 donne en menuconfig
+	(32) CS GPIO 
+	(32) RST GPIO
+	(25) MISO GPIO
+	(26) MOSI GPIO
+	(33) SCK GPIO
 
 tableau (ce qui a marché au moins une fois en pins sur l'esp32 pour éviter les moments de solitude): 
 
