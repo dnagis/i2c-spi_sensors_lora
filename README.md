@@ -14,6 +14,23 @@ semtech module Lora https://www.semtech.com/products/wireless-rf/lora-transceive
 -Demystifier pourquoi des fois dans un nouveau système (une nouvelle install) ça marche pas out of the box: pquoi des fois bricolage de la fréquence fait
 	fonctionner...
 -Garder les tarball libftdi et libmpsse qq part sur kimsufi ils sont précieux +++
+-Essais real life: 
+
+Il faut recommencer à l'arbre mort: quand ça n'a pas marché à l'arbre mort, l'antenne était à l'intérieur, et en rentrant ça marchait pas non plus. J'avais pas encore de manière de visualiser sur le 
+tel les dernieres réceptions en direct
+
+au carré mer par contre ça passait pas alors qu'en rentrant ça passait. Antenne à l'exterieur, mais archi mal positionnée.
+
+
+Mon système: un script sur le XPS13 qui scp la db, requete les 10 dernieres lignes -> fichier txt -> upload vers kimsufi:
+while true
+do
+	scp pal:/root/lora.db .
+	sqlite3 lora.db "select payload, datetime(epoch, 'unixepoch','localtime') from data order by epoch desc limit 10" > log_lora.txt
+	scp log_lora.txt ks:/var/www/fileserver/public/perso/
+	sleep 60
+done
+
 	
 
 	
