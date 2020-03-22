@@ -36,8 +36,7 @@ librairies
 https://github.com/pololu/lis3mdl-arduino
 * adafruit:
 https://github.com/adafruit/Adafruit_CircuitPython_LIS3MDL/blob/master/adafruit_lis3mdl.py
-* polulu:
-https://github.com/pololu/lis3mdl-arduino
+
 
 
 bin->dec 		bc <<< "ibase=2;obase=A;100"		-> 4
