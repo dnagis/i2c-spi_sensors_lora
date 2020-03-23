@@ -1,5 +1,14 @@
 #!/usr/bin/env python
 
+
+######################################################
+#
+# ESSAYER DE PASSER A PYFTDI lora_pyftdi MERCI
+#
+#
+######################################################
+
+
 from mpsse import *
 from time import sleep
 import datetime
