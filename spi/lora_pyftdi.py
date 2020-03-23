@@ -17,12 +17,24 @@ def read_one(register):
 
 def write_one(register, payload):
 	slave.exchange([register | 0x80 , payload]) #au vu de la datasheet page 80 -> on OR avec 0x80 pour que le premier bit soit a write
+	
+def lecture_rx():
+	rx_len = read_one(0x13)#REG_13_RX_NB_BYTES -> taille du packet recu
+	cur_adr = read_one(0x10) #REG_10_FIFO_RX_CURRENT_ADDR	
+	print("RX_LEN: %s - CUR_ADR: %s" % (str(rx_len), hex(cur_adr)))
+	write_one(0x0d , cur_adr) #REG_0D_FIFO_ADDR_PTR "FIFO SPI pointer"
+	out = slave.exchange([0x00], rx_len) #REG_00_FIFO = 0x00 "FIFO r/w access"
+	print(out)
+
+
+
 
 #initialisation SPI
 spi = SpiController()
 spi.configure('ftdi://ftdi:2232h/1')
 slave = spi.get_port(cs=0, freq=10E6, mode=0)
 
+write_one(0x0f , 0x00) #REG_0F_FIFO_RX_BASE_ADDR --> p.35. tte la memory FIFO assignee au Rx
 
 print("OP_MODE=", format(read_one(0x01), '#010b'))
 write_one(0x01 , 0x80) #0x01 = REG_01_OP_MODE -> 0b10000000 -> long range mode (LoRa) (p 108 )
@@ -48,7 +60,10 @@ write_one(0x12 , 0xff) #REG_12_IRQ_FLAGS clear ses flags
 write_one(0x01 , 0x05) #mode RxContinuous
 
 while True:
-	print("IRQ FLAGS:", format(read_one(0x12), '#010b'))  #REG_12_IRQ_FLAGS
+	#print("IRQ FLAGS:", format(read_one(0x12), '#010b'))  #REG_12_IRQ_FLAGS
+	if(read_one(0x12) & 0x40): # RX_DONE flag is up!
+		lecture_rx()
+		write_one(0x12 , 0xff) #REG_12_IRQ_FLAGS clear ses flags
 	sleep(1)
 
 
