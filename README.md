@@ -1,6 +1,6 @@
-# FTDI 2232H (gros breakout violet) pour avoir du pinout via USB, et du spi (mcp3008, lora) et de li2c (bmx280, lis3mdl)
+# FTDI 2232H (gros breakout violet) pour avoir du pinout en USB: spi (mcp3008, lora, ...) et i2c (bmx280, lis3mdl, ina219, ...)
 
-# Datasheets
+# Datasheet
 FTDI 2232HL https://www.ftdichip.com/Support/Documents/DataSheets/ICs/DS_FT2232H.pdf
 
 
