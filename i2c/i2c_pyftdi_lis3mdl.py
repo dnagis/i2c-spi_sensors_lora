@@ -40,12 +40,17 @@ def bin_vers_hex(value):
 	return hex(int(value))
 
 #les valeurs sont en High et Low bytes, et le 16 bit resultant est un 2s complement ce qui permet d avoir des valeurs signed
+#(la logique: pour un negatif, tu inverses les bits. comme le range est moitie moindre, forcement si le MSB est a 1 cest que tu as
+#	fait cette manip pour un negatif
+#"""compute the 2's complement of int value val"""
 #Two's complement subtracts off (1<<bits) if the highest bit is 1. Taking 8 bits for example, this gives a range of 127 to -128.	
 def twos_comp(val):
-    """compute the 2's complement of int value val"""
     if (val & (1 << (16 - 1))) != 0: # if sign bit is set e.g., 8bit: 128-255
         val = val - (1 << 16)        # compute negative value
     return val                         # return positive value as is
+
+def scaled(val):
+	return val / 6842
 
 def vector_2_degrees(x, y):
     angle = degrees(atan2(y, x))
@@ -88,13 +93,27 @@ print("REG5=",hex_vers_bin(REG_5))
 
 
 MAG_OUT = slave.read_from(OUT_X_L_ADDR, 6) #pas besoin de ORer le MSB pour avoir addr auto-increment: la librairie le fait je pense
+
 MAG_X = MAG_OUT[1] << 8 | MAG_OUT[0] #combine high and low bytes
 MAG_Y = MAG_OUT[3] << 8 | MAG_OUT[2]
 MAG_Z = MAG_OUT[5] << 8 | MAG_OUT[4]
-print("X=",twos_comp(MAG_X))
-print("Y=",twos_comp(MAG_Y))
-print("Z=",twos_comp(MAG_Z))
 
+print("X 2 comp =",twos_comp(MAG_X))
+print("Y 2 comp =",twos_comp(MAG_Y))
+print("Z 2 comp =",twos_comp(MAG_Z))
 
-print("{:.2f}".format(vector_2_degrees(MAG_X,MAG_Y)))
+#essayer d avoir des valeurs utilisables:
+#https://github.com/electricimp/LIS3MDL/blob/master/LIS3MDL.class.nut
+#https://github.com/SuperHouse/esp-open-rtos/tree/master/extras/lis3mdl -> lis3mdl_get_float_data()
+#https://github.com/SuperHouse/esp-open-rtos/blob/master/extras/lis3mdl/lis3mdl.c
+#la scale en Gauss: paramètre Full Scale: REG2. +/-4 pour moi.
+#j'ai deux references ou pour la scale a 4 ils multiplieent par 1/6842 = 4/27368
+#static SENSITIVITY_OF_MIN_SCALE = 27368.0; // = (4 gauss scale) * (6842 LSB/gauss at 4 gauss scale)
+# scaled = signed * _scale / SENSITIVITY_OF_MIN_SCALE; -> donc *4/27368 ou *1/6842
+
+print("X scaled=", scaled(twos_comp(MAG_X)))
+print("Y scaled=", scaled(twos_comp(MAG_Y)))
+print("Z scaled=", scaled(twos_comp(MAG_Z)))
+
+print("{:.2f}".format(vector_2_degrees(scaled(twos_comp(MAG_X)),scaled(twos_comp(MAG_Y)))))
 
