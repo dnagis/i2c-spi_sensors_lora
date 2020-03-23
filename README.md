@@ -1,11 +1,12 @@
-# FTDI 2232H (gros breakout violet) pour avoir du pinout en USB: spi (mcp3008, lora, ...) et i2c (bmx280, lis3mdl, ina219, ...)
+# chips en interface SPI (mcp3008, lora, ...) et I²C (bmx280, lis3mdl, ina219, ...)
 
-# Datasheet
+
+## FTDI 2232H =(gros breakout violet) pour avoir du pinout en USB donc sur un ordi
+
+### Datasheet
 FTDI 2232HL https://www.ftdichip.com/Support/Documents/DataSheets/ICs/DS_FT2232H.pdf
 
-
-# FTDI puce FT2232 
-## librairies 
+### librairies 
 prereqs (à démystifier):
 	python2 (pas de python3 sinon le configure de mpsse trouve pas les includes qu'il cherche)
 	en commun avec mon tarball GEO (swig / pcre / ...) donc untar GEO
@@ -24,5 +25,5 @@ pyftdi (pour i2c, au moins)
 	les exemples: https://github.com/eblot/pyftdi dans tests/
 	
 
-## pinouts FT2232H: p.9 de la datasheet: DS_FT2232H.pdf correspondance A[D;C]BUS[0;7] et B[D;C]BUS[0;7] (inscriptions dongle) et MPSSE
+### pinouts FT2232H: p.9 de la datasheet: DS_FT2232H.pdf correspondance A[D;C]BUS[0;7] et B[D;C]BUS[0;7] (inscriptions dongle) et MPSSE
 
