@@ -17,7 +17,7 @@ CTRL_REG4_ADDR   = 0x23
 CTRL_REG5_ADDR   = 0x24
 
 STATUS_REG_ADDR  = 0x27
-OUT_X_L_ADDR     = 0x28 #Les 6 mag value a chaque fois: High and Low Bytes, the value is expressed as two's complement 
+OUT_X_L_ADDR     = 0x28 #Les 6 mag(netometer) values a chaque fois: "H"igh and "L"ow Bytes, the value is expressed as two's complement (cf ci dessous)
 OUT_X_H_ADDR     = 0x29
 OUT_Y_L_ADDR     = 0x2A
 OUT_Y_H_ADDR     = 0x2B
@@ -49,8 +49,16 @@ def twos_comp(val):
         val = val - (1 << 16)        # compute negative value
     return val                         # return positive value as is
 
+
+
+#Conversion des valeurs en bits vers valeur en Gauss
+#la scale (paramètre "FS" = Full Scale) est en Gauss. DS page 8. 
+#quand tu es à FS +/- 4 (REG2) le tableau dit: il y a 6842 LSB par Gauss. J'ai mon result en LSB donc regle de 3.
 def scaled(val):
 	return val / 6842
+	
+	
+
 
 def vector_2_degrees(x, y):
     angle = degrees(atan2(y, x))
@@ -66,25 +74,18 @@ ctrl.configure('ftdi://ftdi:2232h/1')
 
 slave = ctrl.get_port(0x1E) #l'adresse sur le bus, i2cdetect (i2c-tools) ou i2cscan.py (pyftdi). Definie dans DS p.17, depend de SDO au GND ou pas
 
-#print(bin_vers_hex(0b11110000))
+
 slave.write_to(CTRL_REG1_ADDR, b'\xF0') #0x70 = 0b01110000, 0xF0 = 0b11110000 (TEMP_EN, OM = 11 (ultra-high-performance mode for X and Y); DO = 100 (10 Hz ODR))
-REG_1 = slave.read_from(CTRL_REG1_ADDR,1) #print(type(REG_DATA)) -> #<class 'bytearray'>
-print("REG1=",hex_vers_bin(REG_1))
-
+print("REG1: {:#010b}".format(   slave.read_from(CTRL_REG1_ADDR,1)[0]   ))
 slave.write_to(CTRL_REG2_ADDR, b'\x00') #pour la suite voir lis3mdl-arduino
-REG_2 = slave.read_from(CTRL_REG2_ADDR,1) 
-print("REG2=",hex_vers_bin(REG_2))
-
+print("REG2: {:#010b}".format(   slave.read_from(CTRL_REG2_ADDR,1)[0]   ))
 slave.write_to(CTRL_REG3_ADDR, b'\x00') 
-REG_3 = slave.read_from(CTRL_REG3_ADDR,1) 
-print("REG3=",hex_vers_bin(REG_3))
-
+print("REG3: {:#010b}".format(   slave.read_from(CTRL_REG3_ADDR,1)[0]   ))
 slave.write_to(CTRL_REG4_ADDR, b'\x0C') 
-REG_4 = slave.read_from(CTRL_REG4_ADDR,1) 
-print("REG4=",hex_vers_bin(REG_4))
+print("REG4: {:#010b}".format(   slave.read_from(CTRL_REG4_ADDR,1)[0]   ))
+print("REG5: {:#010b}".format(   slave.read_from(CTRL_REG5_ADDR,1)[0]   ))
 
-REG_5 = slave.read_from(CTRL_REG5_ADDR,1) 
-print("REG5=",hex_vers_bin(REG_5))
+
 
 #Temperature
 #TEMP_OUT = slave.read_from(TEMP_OUT_L_ADDR | 0x80, 2) 
@@ -92,7 +93,7 @@ print("REG5=",hex_vers_bin(REG_5))
 #print("TEMP=",twos_comp(TEMP))
 
 
-MAG_OUT = slave.read_from(OUT_X_L_ADDR, 6) #pas besoin de ORer le MSB pour avoir addr auto-increment: la librairie le fait je pense
+MAG_OUT = slave.read_from(OUT_X_L_ADDR, 6) #pas besoin de ORer le MSB pour avoir addr auto-increment (p17 DS): la librairie le fait je pense
 
 MAG_X = MAG_OUT[1] << 8 | MAG_OUT[0] #combine high and low bytes
 MAG_Y = MAG_OUT[3] << 8 | MAG_OUT[2]
@@ -106,10 +107,7 @@ print("Z 2 comp =",twos_comp(MAG_Z))
 #https://github.com/electricimp/LIS3MDL/blob/master/LIS3MDL.class.nut
 #https://github.com/SuperHouse/esp-open-rtos/tree/master/extras/lis3mdl -> lis3mdl_get_float_data()
 #https://github.com/SuperHouse/esp-open-rtos/blob/master/extras/lis3mdl/lis3mdl.c
-#la scale en Gauss: paramètre Full Scale: REG2. +/-4 pour moi.
-#j'ai deux references ou pour la scale a 4 ils multiplieent par 1/6842 = 4/27368
-#static SENSITIVITY_OF_MIN_SCALE = 27368.0; // = (4 gauss scale) * (6842 LSB/gauss at 4 gauss scale)
-# scaled = signed * _scale / SENSITIVITY_OF_MIN_SCALE; -> donc *4/27368 ou *1/6842
+
 
 print("X scaled=", scaled(twos_comp(MAG_X)))
 print("Y scaled=", scaled(twos_comp(MAG_Y)))
