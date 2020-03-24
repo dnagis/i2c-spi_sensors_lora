@@ -30,8 +30,6 @@ Commandes: Aliexpress (11-19, ...)
 	Connecteur antenne: SMA connecteur Jack femelle pour 1.6mm bord de soudure PCB montage droit plaqué or connecteurs RF prise de soudure
 	Antennes: 5 pièces/lot mini caoutchouc 868 MHz antennes, antenne 868 MHz ISM Terminal SMA (M)
 
-PCB easyEDA de décembre 2019 pour RFM95
-
 Première commande: 2019 (Kloug's) chez Aliexpress -> Semtech SX1276/77/78/79 based boards + breakout boards LoRa chez Tindie (cf projet partagé klougien sur gitlab "LORA - Node to Node")
 
 Soudure
@@ -42,12 +40,12 @@ Connecteurs d'antennes: flux + mini boule au bout de la panne à appliquer direc
 
 
 
-## Lora SX1276 - FT2232H
-voir lora_mpsse.py -> attention c'est du python2
+## Lora SX1276 - FTDI breakout violet FT2232H
+en python, sur un ordi en USB
+lora_pyftdi -> Python3 j'essaie de passer à ça: la doc est plus explicite que mpsse
+lora_mpsse.py -> Python2
 
-parler au module lora RFM95 via une puce FTDI 2232H avec la librairie mpsse
-base = https://gitlab.com/the-plant/raspi-lora
-cote esp32 jutilise https://github.com/Inteform/esp32-lora-library
+NB pas d interrupts (car la puce FTDI ne le supporte pas contrairement à GPIO sur le rpi) donc 4 connexions SPI + l'alim
 
 connexions: 
 RFM95			FT2232H (voir dataSheet FT2232H pp 9 et 14 - pour l'histoire output/input)
@@ -57,7 +55,9 @@ MO  			AD1 = OUTPUT (TDI/DO)
 MI 				AD2 = INPUT (TDO/DI)
 CS/NSS 			AD3
 
-NB jutilise pas d interrupts donc 4 connexions SPI + l'alim et cest tout!
+
+
+
 
 ## Lora SX1276 - esp32 
 https://github.com/Inteform/esp32-lora-library (pas évident d'adapter librairies arduino sur esp32)
@@ -86,14 +86,19 @@ esp32(alt)	25	26	27	14
 esp32(alt)	32	33	25	26
 
 oublier 34 et 35 sur l'esp pour SPI, que ce soit pour NSS SCK, MI ou MO
+
 RST à 1 donne un comportement très misleading: bloquage dans le bootup causé par lora_init() et on ne voit même pas un printf() avant!
-
-
 
 RST pas obligatoire pour Lora pour fonctionnement de base avec l'esp32.
 
 
+
+
+
 ## Lora SX1276 - rpi 
+
+1) raspi-lora
+raspi-lora utilise Rpi.GPIO pour recevoir un interrupt (D0 sur SX1276), et spidev pour parler à la puce en spi
 https://gitlab.com/the-plant/raspi-lora -> NB je n'ai pas à bricoler dans la librairie!
 deps:
 	python2 (ils disent python3 only mais pas vrai...)
@@ -115,7 +120,7 @@ BCM8 (CE0)							NSS
 BCM9 (MISO)							MI
 BCM10 (MOSI)						MO
 BCM11 (SCLK)						SCK
-BCM17 (arg n°2 de Lora())			D0	#Attention il **faut** le mettre pour le rpi (alors qu'esp32 pas obligatoire). Je suppose que c'est un interrupt
+BCM17 (arg n°2 de lora())			D0	#Attention il **faut** le mettre pour raspi-lora: c'est comme ça que le Rx est triggered (une LED sur D0 s'allume au Rx)
 
 
 
@@ -123,27 +128,4 @@ BCM17 (arg n°2 de Lora())			D0	#Attention il **faut** le mettre pour le rpi (al
 ## moments de solitude
 J'ai déjà eu des non fonctionnements qui ont été résolu peu de temps après que je modifie la fréquence (915 -> 868, et vice et versa) sur l'émetteur et sur le 
 récepteur, sans que je comprenne pourquoi
-
-#ToDo lora
--Demystifier pourquoi des fois dans un nouveau système (une nouvelle install) ça marche pas out of the box: pquoi des fois bricolage de la fréquence fait
-	fonctionner...
--Garder les tarball libftdi et libmpsse qq part sur kimsufi ils sont précieux +++
--Essais real life: 
-
-Il faut recommencer à l'arbre mort: quand ça n'a pas marché à l'arbre mort, l'antenne était à l'intérieur, et en rentrant ça marchait pas non plus. J'avais pas encore de manière de visualiser sur le 
-tel les dernieres réceptions en direct
-
-au carré mer par contre ça passait pas alors qu'en rentrant ça passait. Antenne à l'exterieur, mais archi mal positionnée.
-
-
-Mon système: un script sur le XPS13 qui scp la db, requete les 10 dernieres lignes -> fichier txt -> upload vers kimsufi:
-while true
-do
-	scp pal:/root/lora.db .
-	sqlite3 lora.db "select payload, datetime(epoch, 'unixepoch','localtime') from data order by epoch desc limit 10" > log_lora.txt
-	scp log_lora.txt ks:/var/www/fileserver/public/perso/
-	sleep 60
-done
-
-	
 
