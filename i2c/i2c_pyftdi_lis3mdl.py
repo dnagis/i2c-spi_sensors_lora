@@ -103,10 +103,9 @@ print("X 2 comp =",twos_comp(MAG_X))
 print("Y 2 comp =",twos_comp(MAG_Y))
 print("Z 2 comp =",twos_comp(MAG_Z))
 
-#essayer d avoir des valeurs utilisables:
-#https://github.com/electricimp/LIS3MDL/blob/master/LIS3MDL.class.nut
-#https://github.com/SuperHouse/esp-open-rtos/tree/master/extras/lis3mdl -> lis3mdl_get_float_data()
-#https://github.com/SuperHouse/esp-open-rtos/blob/master/extras/lis3mdl/lis3mdl.c
+
+#Une fois que le reve de bisounours-land is over:
+#https://arduino.stackexchange.com/questions/18625/converting-three-axis-magnetometer-to-degrees
 
 
 print("X scaled=", scaled(twos_comp(MAG_X)))
