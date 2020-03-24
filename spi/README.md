@@ -3,10 +3,15 @@
 * Disambiguation:
 NSS = Chip select = CE(0/1) sur le rpi ("Chip Enable")
 
+## Scripts:
+NUC : utiliser lora_pyftdi.py (mpsse je trouve l'api moins documentée)
+Rpi : utiliser rpi_lora_spidev.py (raspi-lora utilise interrupt et me cache la communication avec les registers)
+
+pyftdi sur le NUC et spidev sur le Rpi -> homogénéité
 
 
 ## MCP3008 (essentiellement pour tests)
-connextion FTDI 2232 - MCP3008:
+connexion FTDI 2232 - MCP3008:
 AD1 (TDI/DO = OUTPUT cf p.14 de la DS) sur DIN du mcp3008
 AD2 (TDO/DI) sur DOUT du mcp3008
 AD3 (CS) et AD0 (CLK) pas de pb
@@ -59,6 +64,41 @@ CS/NSS 			AD3
 
 
 
+## Lora SX1276 - rpi 
+-rpi_lora_spidev
+	on parle direct aux registers via spidev, comme avec pyftdi. Pas d'interrupts (donc pin D0 inutile) -> lecture de flags dans un loop. 
+	on voit ce qui se passe. du code bio.
+
+
+-raspi-lora https://gitlab.com/the-plant/raspi-lora
+	utilisé initialement. 
+	raspi-lora utilise Rpi.GPIO pour recevoir un interrupt (D0 sur SX1276), et spidev pour parler à la puce en spi
+	NB je n'ai pas à bricoler dans la librairie!
+deps:
+	python2 (ils disent python3 only mais pas vrai...)
+	modprobe spidev + spi-bcm2835 ( --> /dev/spidev0.0  /dev/spidev0.1)
+	librairies python spidev et RPi.GPIO -> un peu chiant (libpython2.7) voir rpi->python
+-> install = cp le raspi_lora/ qui contient __init__.py dans site-packages/ 
+-> un truc que j'ai pas eu au départ: chelou: 
+ raspi_lora/lora.py ligne 57
+ # set modem config (Bw125Cr45Sf128)                                                      
+        self._spi_write(REG_1D_MODEM_CONFIG1, self._modem_config.value[0]) --> AttributeError: 'tuple' object has no attribute 'value
+		self._spi_write(REG_1D_MODEM_CONFIG1, self._modem_config[0]) --> OK
+-> code pour appeler: ci joint rpi_lora.py
+-> /lib/python2.7/site-packages/raspi_lora/lora.py est là où tout se passe. nb il m'est déjà arrivé d'y bidouiller des trucs dans _spi_write() et d'oublier de les enlever
+
+Connexions:
+Rpi	(pinout.xyz)					RFM95
+-----								-----
+BCM8 (CE0)							NSS
+BCM9 (MISO)							MI
+BCM10 (MOSI)						MO
+BCM11 (SCLK)						SCK
+BCM17 (arg n°2 de lora())			D0	#Attention il **faut** le mettre pour raspi-lora: c'est comme ça que le Rx est triggered (une LED sur D0 s'allume au Rx)
+
+
+
+
 
 ## Lora SX1276 - esp32 
 https://github.com/Inteform/esp32-lora-library (pas évident d'adapter librairies arduino sur esp32)
@@ -92,36 +132,6 @@ RST à 1 donne un comportement très misleading: bloquage dans le bootup causé 
 
 RST pas obligatoire pour Lora pour fonctionnement de base avec l'esp32.
 
-
-
-
-
-## Lora SX1276 - rpi 
-
-1) raspi-lora https://gitlab.com/the-plant/raspi-lora
-	raspi-lora utilise Rpi.GPIO pour recevoir un interrupt (D0 sur SX1276), et spidev pour parler à la puce en spi
-	NB je n'ai pas à bricoler dans la librairie!
-deps:
-	python2 (ils disent python3 only mais pas vrai...)
-	modprobe spidev + spi-bcm2835 ( --> /dev/spidev0.0  /dev/spidev0.1)
-	librairies python spidev et RPi.GPIO -> un peu chiant (libpython2.7) voir rpi->python
--> install = cp le raspi_lora/ qui contient __init__.py dans site-packages/ 
--> un truc que j'ai pas eu au départ: chelou: 
- raspi_lora/lora.py ligne 57
- # set modem config (Bw125Cr45Sf128)                                                      
-        self._spi_write(REG_1D_MODEM_CONFIG1, self._modem_config.value[0]) --> AttributeError: 'tuple' object has no attribute 'value
-		self._spi_write(REG_1D_MODEM_CONFIG1, self._modem_config[0]) --> OK
--> code pour appeler: ci joint rpi_lora.py
--> /lib/python2.7/site-packages/raspi_lora/lora.py est là où tout se passe. nb il m'est déjà arrivé d'y bidouiller des trucs dans _spi_write() et d'oublier de les enlever
-
-Connexions:
-Rpi	(pinout.xyz)					RFM95
------								-----
-BCM8 (CE0)							NSS
-BCM9 (MISO)							MI
-BCM10 (MOSI)						MO
-BCM11 (SCLK)						SCK
-BCM17 (arg n°2 de lora())			D0	#Attention il **faut** le mettre pour raspi-lora: c'est comme ça que le Rx est triggered (une LED sur D0 s'allume au Rx)
 
 
 
