@@ -2,7 +2,7 @@
 import spidev
 from time import sleep
 
-#lora en spidev direct pour homogeneite avec pyftdi
+#lora en spidev direct pour homogeneite avec pyftdi. Pas dutilisation d interrupts
 
 
 
@@ -23,8 +23,10 @@ def lecture_rx():
 	cur_adr = read_one(0x10) #REG_10_FIFO_RX_CURRENT_ADDR	
 	print 'RX!!! len {:d} cur_adr 0x{:X}'.format(rx_len, cur_adr)
 	write_one(0x0d , cur_adr) #REG_0D_FIFO_ADDR_PTR "FIFO SPI pointer"
-	#out = spi.xfer([0x00], rx_len) #REG_00_FIFO = 0x00 "FIFO r/w access"
-	#print(out)
+	out = spi.xfer(bytearray(rx_len+1)) #astuce: le premier byte = REG_00_FIFO = 0x00 "FIFO r/w access"
+	rx_string = "".join(map(chr, out[1:])) #on enleve le premier byte
+	print 'on a recu: {:s}'.format(rx_string) #<type 'list'>
+
 	
 
 #initialisation du bus spi
@@ -62,8 +64,9 @@ write_one(0x12 , 0xff) #REG_12_IRQ_FLAGS clear ses flags
 
 write_one(0x01 , 0x05) #mode RxContinuous
 
+#boucle de Rx check de flags
 while True:
-	print 'IRQ FLAGS: {:#010b}'.format(read_one(0x12)) #REG_12_IRQ_FLAGS
+	#print 'IRQ FLAGS: {:#010b}'.format(read_one(0x12)) #REG_12_IRQ_FLAGS
 	if(read_one(0x12) & 0x40): # RX_DONE flag is up!
 		lecture_rx()
 		write_one(0x12 , 0xff) #REG_12_IRQ_FLAGS clear ses flags
