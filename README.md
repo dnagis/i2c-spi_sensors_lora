@@ -1,4 +1,4 @@
-# chips en interface SPI (mcp3008, lora, ...) et I²C (bmx280, lis3mdl, ina219, ...)
+# Interfaces serial: SPI (mcp3008, sx1276[lora], ...) et I²C (bmx280, lis3mdl, ina219, ...)
 
 
 ## FTDI 2232H =(gros breakout violet) pour avoir du pinout en USB donc sur un ordi

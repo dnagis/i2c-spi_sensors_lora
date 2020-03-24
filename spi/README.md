@@ -1,6 +1,7 @@
 # SPI (Lora, mcp3008, ...) 
 
-NSS = Chip select
+* Disambiguation:
+NSS = Chip select = CE(0/1) sur le rpi ("Chip Enable")
 
 
 
@@ -97,9 +98,9 @@ RST pas obligatoire pour Lora pour fonctionnement de base avec l'esp32.
 
 ## Lora SX1276 - rpi 
 
-1) raspi-lora
-raspi-lora utilise Rpi.GPIO pour recevoir un interrupt (D0 sur SX1276), et spidev pour parler à la puce en spi
-https://gitlab.com/the-plant/raspi-lora -> NB je n'ai pas à bricoler dans la librairie!
+1) raspi-lora https://gitlab.com/the-plant/raspi-lora
+	raspi-lora utilise Rpi.GPIO pour recevoir un interrupt (D0 sur SX1276), et spidev pour parler à la puce en spi
+	NB je n'ai pas à bricoler dans la librairie!
 deps:
 	python2 (ils disent python3 only mais pas vrai...)
 	modprobe spidev + spi-bcm2835 ( --> /dev/spidev0.0  /dev/spidev0.1)
