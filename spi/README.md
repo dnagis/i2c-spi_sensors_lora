@@ -118,13 +118,14 @@ Le PCB que je design mars 2020 donne en menuconfig
 
 possibilités (ce qui a marché au moins une fois en pins sur l'esp32 pour éviter les moments de solitude): 
 
-RFM95		NSS	SCK	MI	MO RST //pas obligatoire
+RFM95			NSS	SCK	MI	MO	(NB RST pas obligatoire)
 
-esp32		32	33	21	19
-esp32(alt)	23	22	21	19
-esp32(alt)	32	33	27	14
-esp32(alt)	25	26	27	14 
-esp32(alt)	32	33	25	26
+config_esp_1	32	33	25	26	vérifié mars 2020
+config_esp_2	32	33	21	19	
+config_esp_3	23	22	21	19
+config_esp_4	32	33	27	14
+config_esp_5	25	26	27	14 
+
 
 oublier 34 et 35 sur l'esp pour SPI, que ce soit pour NSS SCK, MI ou MO
 
