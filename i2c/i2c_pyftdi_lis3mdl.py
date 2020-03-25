@@ -105,13 +105,24 @@ print("Y 2 comp =",twos_comp(MAG_Y))
 print("Z 2 comp =",twos_comp(MAG_Z))
 
 
-#Une fois que le reve de bisounours-land is over:
-#https://arduino.stackexchange.com/questions/18625/converting-three-axis-magnetometer-to-degrees
-
-
 print("X scaled=", scaled(twos_comp(MAG_X)))
 print("Y scaled=", scaled(twos_comp(MAG_Y)))
 print("Z scaled=", scaled(twos_comp(MAG_Z)))
 
 print("{:.2f}".format(vector_2_degrees(scaled(twos_comp(MAG_X)),scaled(twos_comp(MAG_Y)))))
 
+#Transformer les valeurs X Y et Z en heading "convert gauss x y z to heading magnetometer"
+#keywords magnetometer vector
+#https://stackoverflow.com/questions/35600583/how-do-i-convert-raw-xyz-magnetometer-data-to-a-heading
+#-->  dit angle = atan2(Y, X); (sans compensation for tilt)
+#math.atan2(y, x) en python donne un résultat en coordonnées polaires, en radians compris entre -pi et +pi. atan2 peut donner le quadrant car il a le signe
+#pour récupérer les degrés à partir de ça: math.degrees(theta)
+#math.atan2(1, 1) -> 0.7853981633974483
+#math.degrees(0.7853981633974483) -> 45.0
+
+
+
+#https://blog.digilentinc.com/how-to-convert-magnetometer-data-into-compass-heading/
+#https://arduino.stackexchange.com/questions/18625/converting-three-axis-magnetometer-to-degrees
+#arctangant revient souvent!
+#
