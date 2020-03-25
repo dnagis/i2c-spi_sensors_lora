@@ -1,4 +1,5 @@
 #!/bin/python
+# -*-coding:Latin-1 -*
 
 #lora en spidev direct pour homogeneite avec pyftdi. Pas dutilisation d interrupts
 
