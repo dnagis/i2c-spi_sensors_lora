@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+# -*-coding:Latin-1 -*
 
 #lis3mdl (magnetometer)
 

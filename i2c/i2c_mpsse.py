@@ -1,4 +1,5 @@
 #!/usr/bin/python
+# -*-coding:Latin-1 -*
 
 #i2c avec la puce FTDI
 #Un essai rapide avant que je decouvre pyftdi. Je n'ai pas explore

@@ -1,5 +1,5 @@
 #!/bin/python
-#coding=utf-8
+# -*-coding:Latin-1 -*
 
 import time
 import pigpio 
