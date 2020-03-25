@@ -33,7 +33,9 @@ def lecture_rx():
 	out = spi.xfer(bytearray(rx_len+1)) #astuce: le premier byte = REG_00_FIFO = 0x00 "FIFO r/w access"
 	rx_string = "".join(map(chr, out[1:])) #on enleve le premier byte
 	print 'on a recu: {:s}'.format(rx_string) #<type 'list'>
-	logbdd(rx_string)
+	if rx_string[0] == 's': #protection de messages non d..sir..s
+		logbdd(rx_string) 
+
 
 	
 

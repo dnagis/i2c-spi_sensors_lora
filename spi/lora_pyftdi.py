@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+# -*-coding:Latin-1 -*
 
 #https://eblot.github.io/pyftdi/api/spi.html
 from pyftdi.spi import SpiController, SpiIOError
@@ -16,7 +17,7 @@ def read_one(register):
 	return out[0]
 
 def write_one(register, payload):
-	slave.exchange([register | 0x80 , payload]) #au vu de la datasheet page 80 -> on OR avec 0x80 pour que le premier bit soit a write
+	slave.exchange([register | 0x80 , payload]) #au vu de la datasheet page 80 -> on OR avec 0x80 pour que le premier bit soit à write
 	
 def lecture_rx():
 	rx_len = read_one(0x13)#REG_13_RX_NB_BYTES -> taille du packet recu
@@ -24,7 +25,8 @@ def lecture_rx():
 	print("RX_LEN: %s - CUR_ADR: %s" % (str(rx_len), hex(cur_adr)))
 	write_one(0x0d , cur_adr) #REG_0D_FIFO_ADDR_PTR "FIFO SPI pointer"
 	out = slave.exchange([0x00], rx_len) #REG_00_FIFO = 0x00 "FIFO r/w access"
-	print(out)
+	if chr(out[0]) == 's': #protection par lecture du premier byte (pour ne pas Rx des msgs d'autres senders
+		print(out)
 
 
 
