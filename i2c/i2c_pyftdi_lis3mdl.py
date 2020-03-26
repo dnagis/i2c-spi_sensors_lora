@@ -7,6 +7,8 @@
 from pyftdi.i2c import I2cController, I2cNackError
 from binascii import hexlify
 from math import atan2, degrees
+import time
+import sys
 
 
 WHO_AM_I_ADDR 	 = 0x0F #Dummy: pratique pour tester un controle positif
@@ -93,23 +95,18 @@ print("REG5: {:#010b}".format(   slave.read_from(CTRL_REG5_ADDR,1)[0]   ))
 #TEMP = TEMP_OUT[1] << 8 | TEMP_OUT[0] #combine high and low bytes
 #print("TEMP=",twos_comp(TEMP))
 
+while(True):
+	MAG_OUT = slave.read_from(OUT_X_L_ADDR, 6) #pas besoin de ORer le MSB pour avoir addr auto-increment (p17 DS): la librairie le fait je pense
+	
+	MAG_X = MAG_OUT[1] << 8 | MAG_OUT[0] #combine high and low bytes
+	MAG_Y = MAG_OUT[3] << 8 | MAG_OUT[2]
+	MAG_Z = MAG_OUT[5] << 8 | MAG_OUT[4]
+	
+	sys.stdout.write("X={:.6f} Y={:.6f} Z={:.6f} \r".format( scaled(twos_comp(MAG_X)), scaled(twos_comp(MAG_Y)), scaled(twos_comp(MAG_Z)) ))
+	time.sleep(0.1)
 
-MAG_OUT = slave.read_from(OUT_X_L_ADDR, 6) #pas besoin de ORer le MSB pour avoir addr auto-increment (p17 DS): la librairie le fait je pense
 
-MAG_X = MAG_OUT[1] << 8 | MAG_OUT[0] #combine high and low bytes
-MAG_Y = MAG_OUT[3] << 8 | MAG_OUT[2]
-MAG_Z = MAG_OUT[5] << 8 | MAG_OUT[4]
-
-print("X 2 comp =",twos_comp(MAG_X))
-print("Y 2 comp =",twos_comp(MAG_Y))
-print("Z 2 comp =",twos_comp(MAG_Z))
-
-
-print("X scaled=", scaled(twos_comp(MAG_X)))
-print("Y scaled=", scaled(twos_comp(MAG_Y)))
-print("Z scaled=", scaled(twos_comp(MAG_Z)))
-
-print("{:.2f}".format(vector_2_degrees(scaled(twos_comp(MAG_X)),scaled(twos_comp(MAG_Y)))))
+#print("{:.2f}".format(vector_2_degrees(scaled(twos_comp(MAG_X)),scaled(twos_comp(MAG_Y)))))
 
 #Transformer les valeurs X Y et Z en heading "convert gauss x y z to heading magnetometer"
 #keywords magnetometer vector
