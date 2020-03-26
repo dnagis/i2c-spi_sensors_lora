@@ -11,6 +11,7 @@ import time
 import sys
 
 
+
 WHO_AM_I_ADDR 	 = 0x0F #Dummy: pratique pour tester un controle positif
 
 CTRL_REG1_ADDR   = 0x20 #les controles: reglages
@@ -77,14 +78,19 @@ ctrl.configure('ftdi://ftdi:2232h/1')
 
 slave = ctrl.get_port(0x1E) #l'adresse sur le bus, i2cdetect (i2c-tools) ou i2cscan.py (pyftdi). Definie dans DS p.17, depend de SDO au GND ou pas
 
-
-slave.write_to(CTRL_REG1_ADDR, b'\xF0') #0x70 = 0b01110000, 0xF0 = 0b11110000 (TEMP_EN, OM = 11 (ultra-high-performance mode for X and Y); DO = 100 (10 Hz ODR))
+#commentaires extensifs dans lis3mdl-arduino
+#slave.write_to(CTRL_REG1_ADDR, b'\xF0') #0x70 = 0b01110000, 0xF0 = 0b11110000 (TEMP_EN, OM = 11 (ultra-high-performance mode for X and Y); DO = 100 (10 Hz ODR))
+slave.write_to(CTRL_REG1_ADDR, int('01110000',2).to_bytes(1, 'big'))
 print("REG1: {:#010b}".format(   slave.read_from(CTRL_REG1_ADDR,1)[0]   ))
-slave.write_to(CTRL_REG2_ADDR, b'\x00') #pour la suite voir lis3mdl-arduino
+
+slave.write_to(CTRL_REG2_ADDR, b'\x00') 
 print("REG2: {:#010b}".format(   slave.read_from(CTRL_REG2_ADDR,1)[0]   ))
 slave.write_to(CTRL_REG3_ADDR, b'\x00') 
 print("REG3: {:#010b}".format(   slave.read_from(CTRL_REG3_ADDR,1)[0]   ))
-slave.write_to(CTRL_REG4_ADDR, b'\x0C') 
+
+
+#slave.write_to(CTRL_REG4_ADDR, b'\x0C') 
+slave.write_to(CTRL_REG4_ADDR, int('00001100',2).to_bytes(1, 'big'))
 print("REG4: {:#010b}".format(   slave.read_from(CTRL_REG4_ADDR,1)[0]   ))
 print("REG5: {:#010b}".format(   slave.read_from(CTRL_REG5_ADDR,1)[0]   ))
 
@@ -106,7 +112,12 @@ while(True):
 	time.sleep(0.1)
 
 
-#print("{:.2f}".format(vector_2_degrees(scaled(twos_comp(MAG_X)),scaled(twos_comp(MAG_Y)))))
+#les valeurs ne sont pas réparties autour de 0
+
+#calibration??
+#https://appelsiini.net/2018/calibrate-magnetometer/
+
+###--> ma bible pour les jours à venir...
 
 #Transformer les valeurs X Y et Z en heading "convert gauss x y z to heading magnetometer"
 #keywords magnetometer vector
