@@ -32,8 +32,8 @@ def lecture_rx():
 	write_one(0x0d , cur_adr) #REG_0D_FIFO_ADDR_PTR "FIFO SPI pointer"
 	out = spi.xfer(bytearray(rx_len+1)) #astuce: le premier byte = REG_00_FIFO = 0x00 "FIFO r/w access"
 	rx_string = "".join(map(chr, out[1:])) #on enleve le premier byte
-	print 'on a recu: {:s}'.format(rx_string) #<type 'list'>
-	if rx_string[0] == 's': #protection de messages non d..sir..s
+	print 'on a recu: {:s}'.format(rx_string) #<type 'list'>	
+	if len(rx_string) != 0 and rx_string[0] == 's': #protection de messages non désirés -> mais pb parfois IndexError: string index out of range
 		logbdd(rx_string) 
 
 
