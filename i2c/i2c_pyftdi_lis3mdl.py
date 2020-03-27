@@ -34,32 +34,51 @@ INT_SRC_ADDR     = 0x31
 INT_THS_L_ADDR   = 0x32
 INT_THS_H_ADDR   = 0x33
 
-#Transformer un hex en binary avec les leading zeros
-def hex_vers_bin(value):
-	#https://www.devdungeon.com/content/working-binary-data-python
-	return format(ord(value), '#010b')
 
-#l inverse	
-def bin_vers_hex(value):
-	return hex(int(value))
 
-#les valeurs sont en High et Low bytes, et le 16 bit resultant est un 2s complement ce qui permet d avoir des valeurs signed
-#(la logique: pour un negatif, tu inverses les bits. comme le range est moitie moindre, forcement si le MSB est a 1 cest que tu as
-#	fait cette manip pour un negatif
+
 #"""compute the 2's complement of int value val"""
+#les valeurs dans les registers sont en High et Low bytes, et le 16 bit resultant est un 2s complement ce qui permet d avoir des valeurs signed
+#(la logique: pour encoder un negatif, tu binary le positif, et tu inverses les bits.
+#Avec cette manip: forcément si le MSB est a 1 c'est que le nombre encodé était négatif. Pourquoi? Parce que le nombre total de valeurs que tu peux encoder
+#dans 16 bits est toujours le même: ça ne peut pas changer. Donc si le MSB est à 1 c'est que la manip d'inversion a été faite (le range est moitie moindre en fait)
+#	
 #Two's complement subtracts off (1<<bits) if the highest bit is 1. Taking 8 bits for example, this gives a range of 127 to -128.	
 def twos_comp(val):
     if (val & (1 << (16 - 1))) != 0: # if sign bit is set e.g., 8bit: 128-255
         val = val - (1 << 16)        # compute negative value
     return val                         # return positive value as is
 
-
-
 #Conversion des valeurs en bits vers valeur en Gauss
 #la scale (paramètre "FS" = Full Scale) est en Gauss. DS page 8. 
 #quand tu es à FS +/- 4 (REG2) le tableau dit: il y a 6842 LSB par Gauss. J'ai mon result en LSB donc regle de 3.
 def scaled(val):
 	return val / 6842
+
+
+#Calibration (uniquement pour récupérer les valeurs min et max de chaque axe lors de la calibration, inutile sinon)
+#prends un tuple (X, Y, Z)
+#CREATE TABLE mag (id INTEGER PRIMARY KEY, X REAL, Y REAL, Z REAL);
+def logbdd_mag(data):
+	con = sqlite3.connect('mag.db') 
+	cur = con.cursor()
+	cur.execute("insert into mag (X, Y, Z) values (?, ?, ?)", data)
+	con.commit()
+	con.close()
+
+
+#X : -0.578193510669395 <-> 0.363197895352236
+#Y : -0.748757673194972 <-> 0.143671441099094
+#Z : 0.106986261327097 <-> 0.989330605086232 
+
+
+def correction_offset(data):
+	cx = data[0] - ((0.363197895352236 - 0.578193510669395) / 2)
+	cy = data[1] - ((0.143671441099094 - 0.748757673194972) / 2)
+	cz = data[2] - ((0.989330605086232 + 0.106986261327097) / 2)
+	cd = (cx, cy, cz)
+	return cd
+
 	
 	
 
@@ -96,7 +115,7 @@ print("REG5: {:#010b}".format(   slave.read_from(CTRL_REG5_ADDR,1)[0]   ))
 
 
 
-#Temperature
+#Temperature (des résultats proche de 50°c, un peu ce que j'avais sur l'esp32
 #TEMP_OUT = slave.read_from(TEMP_OUT_L_ADDR | 0x80, 2) 
 #TEMP = TEMP_OUT[1] << 8 | TEMP_OUT[0] #combine high and low bytes
 #print("TEMP=",twos_comp(TEMP))
@@ -108,19 +127,36 @@ while(True):
 	MAG_Y = MAG_OUT[3] << 8 | MAG_OUT[2]
 	MAG_Z = MAG_OUT[5] << 8 | MAG_OUT[4]
 	
-	sys.stdout.write("X={:.6f} Y={:.6f} Z={:.6f} \r".format( scaled(twos_comp(MAG_X)), scaled(twos_comp(MAG_Y)), scaled(twos_comp(MAG_Z)) ))
+	#twos_comp -> encodage en 16 bits de valeurs signées
+	#scaled -> la sensibilité, résolution, qui dépend de la configuration
+	raw_data=(scaled(twos_comp(MAG_X)), scaled(twos_comp(MAG_Y)), scaled(twos_comp(MAG_Z)))
+	
+	#pas print() car je veux une ligne qui s'auto écrase
+	#sys.stdout.write("X={:.6f} Y={:.6f} Z={:.6f} \r".format( raw_data[0],  raw_data[1], raw_data[2] ))
+	#logbdd_mag(data) #dans vvnx_utils.py. pour calibration only (pour déterminer max et min obtenu pour chacun en bougeant dans tous les sens	
+	
+	cd = correction_offset(raw_data) #pour ça il faut avoir fait la calibration
+	sys.stdout.write("X={:.6f} Y={:.6f} Z={:.6f} \r".format( cd[0], cd[1], cd[2] ))
+
 	time.sleep(0.1)
 
 
-#les valeurs ne sont pas réparties autour de 0
 
-#calibration??
+
+#calibration
 #https://appelsiini.net/2018/calibrate-magnetometer/
+#les valeurs float brutes (genre -0.5781935) ne sont pas réparties autour de 0
+#il faut faire la calibration comme sur un téléphone:
+# --> log dans une bdd et rotater le capteur comme un avion, puis récupérer les valeurs min et max pour chaque axe
+#select min(X) from mag; et max(X), etc......
 
-###--> ma bible pour les jours à venir...
+
+
+
+
 
 #Transformer les valeurs X Y et Z en heading "convert gauss x y z to heading magnetometer"
-#keywords magnetometer vector
+
 #https://stackoverflow.com/questions/35600583/how-do-i-convert-raw-xyz-magnetometer-data-to-a-heading
 #-->  dit angle = atan2(Y, X); (sans compensation for tilt)
 #math.atan2(y, x) en python donne un résultat en coordonnées polaires, en radians compris entre -pi et +pi. atan2 peut donner le quadrant car il a le signe
