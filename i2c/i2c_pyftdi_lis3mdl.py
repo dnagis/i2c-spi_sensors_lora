@@ -84,7 +84,7 @@ def correction_offset(data):
 
 
 def vector_2_degrees(x, y):
-    angle = degrees(atan2(y, x))
+    angle = int(degrees(atan2(x, y)))
     if angle < 0:
         angle += 360
     return angle
@@ -136,7 +136,7 @@ while(True):
 	#logbdd_mag(data) #dans vvnx_utils.py. pour calibration only (pour déterminer max et min obtenu pour chacun en bougeant dans tous les sens	
 	
 	cd = correction_offset(raw_data) #pour ça il faut avoir fait la calibration
-	sys.stdout.write("X={:.6f} Y={:.6f} Z={:.6f} \r".format( cd[0], cd[1], cd[2] ))
+	sys.stdout.write("X={:.6f} Y={:.6f} Z={:.6f} angle={}   \r".format( cd[0], cd[1], cd[2], vector_2_degrees(cd[0],cd[1]) ))
 
 	time.sleep(0.1)
 
@@ -150,23 +150,11 @@ while(True):
 # --> log dans une bdd et rotater le capteur comme un avion, puis récupérer les valeurs min et max pour chaque axe
 #select min(X) from mag; et max(X), etc......
 
-
-
-
-
-
-#Transformer les valeurs X Y et Z en heading "convert gauss x y z to heading magnetometer"
-
-#https://stackoverflow.com/questions/35600583/how-do-i-convert-raw-xyz-magnetometer-data-to-a-heading
-#-->  dit angle = atan2(Y, X); (sans compensation for tilt)
+#valeurs X Y -> heading
 #math.atan2(y, x) en python donne un résultat en coordonnées polaires, en radians compris entre -pi et +pi. atan2 peut donner le quadrant car il a le signe
 #pour récupérer les degrés à partir de ça: math.degrees(theta)
 #math.atan2(1, 1) -> 0.7853981633974483
 #math.degrees(0.7853981633974483) -> 45.0
 
+#la face avec les pinouts orientée vers le nord => angle = 0
 
-
-#https://blog.digilentinc.com/how-to-convert-magnetometer-data-into-compass-heading/
-#https://arduino.stackexchange.com/questions/18625/converting-three-axis-magnetometer-to-degrees
-#arctangant revient souvent!
-#
