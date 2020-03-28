@@ -48,7 +48,7 @@ def twos_comp(val):
     return val  
 
 def scaled(val):
-	return val / 6842
+	return val / 6842.0 #Attention en python2 pour obtenir un float il faut qu'un des 2 soit un float!
 	
 def vector_2_degrees(x, y):
     angle = int(degrees(atan2(x, y)))
@@ -78,14 +78,18 @@ print "REG 4: {:#010b}".format(pi.i2c_read_byte_data(h, CTRL_REG4_ADDR))
 
 print "REG 5: {:#010b}".format(pi.i2c_read_byte_data(h, CTRL_REG5_ADDR))
 
-RET_TUP = pi.i2c_read_i2c_block_data(h,OUT_X_L_ADDR,6)
 
-MAG_OUT = RET_TUP[1]  #The returned value is a tuple of the number of bytes read and a bytearray containing the bytes. 
+while(True):
+	RET_TUP = pi.i2c_read_i2c_block_data(h,OUT_X_L_ADDR,6)
+	
+	MAG_OUT = RET_TUP[1]
+	
+	MAG_X = MAG_OUT[1] << 8 | MAG_OUT[0] #combine high and low bytes
+	MAG_Y = MAG_OUT[3] << 8 | MAG_OUT[2]
+	MAG_Z = MAG_OUT[5] << 8 | MAG_OUT[4]
+	
+	raw_data=(scaled(twos_comp(MAG_X)), scaled(twos_comp(MAG_Y)), scaled(twos_comp(MAG_Z)))
 
-MAG_X = MAG_OUT[1] << 8 | MAG_OUT[0] #combine high and low bytes
-MAG_Y = MAG_OUT[3] << 8 | MAG_OUT[2]
-MAG_Z = MAG_OUT[5] << 8 | MAG_OUT[4]
-
-raw_data=(scaled(twos_comp(MAG_X)), scaled(twos_comp(MAG_Y)), scaled(twos_comp(MAG_Z)))
-cd = correction_offset(raw_data)
-print("X={:.6f} Y={:.6f} Z={:.6f} angle={} ".format( cd[0], cd[1], cd[2], vector_2_degrees(cd[0],cd[1]) ))
+	cd = correction_offset(raw_data)
+	sys.stdout.write("X={:.6f} Y={:.6f} Z={:.6f} angle={}   \r".format( cd[0], cd[1], cd[2], vector_2_degrees(cd[0],cd[1]) ))
+	time.sleep(0.1)
