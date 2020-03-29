@@ -7,7 +7,7 @@
 FTDI 2232HL https://www.ftdichip.com/Support/Documents/DataSheets/ICs/DS_FT2232H.pdf
 
 ### librairies 
-prereqs (à démystifier):
+prereqs (à démystifier, confirmer):
 	python2 (pas de python3 sinon le configure de mpsse trouve pas les includes qu'il cherche)
 	en commun avec mon tarball GEO (swig / pcre / ...) donc untar GEO
 
@@ -19,10 +19,13 @@ libmpsse-1.3 (pour SPI)
 	CFLAGS=-I/usr/include/libftdi1 ./configure --prefix=/usr --libdir=/usr/lib64
 	builder les exemples dans libmpsse: CFLAGS=-I/usr/include/libftdi1 CC=gcc make
 	
-pyftdi (pour i2c, au moins)
+pyftdi (i²c et spi OK)
 	pip install pyftdi -> les exemples sont en python3. je pense que tout est en python3.
-	**ATTENTION** pour i2c sur FT2232H il faut connecter AD1 et AD2 ensembles (https://eblot.github.io/pyftdi/pinout.html)
-	les exemples: https://github.com/eblot/pyftdi dans tests/
+	**VERIFIER L'INSTALL PYFTDI: fait pendant le confinement, idées moyennement claires**
+	**ATTENTION PINOUT PYFTDI** pour i2c sur FT2232H il faut connecter AD1 et AD2 ensembles (https://eblot.github.io/pyftdi/pinout.html)
+	https://github.com/eblot/pyftdi --> tests/
+	spi/lora_pyftdi.py
+	i2c/i2c_pyftdi_lis3mdl.py
 	
 
 ### pinouts FT2232H: p.9 de la datasheet: DS_FT2232H.pdf correspondance A[D;C]BUS[0;7] et B[D;C]BUS[0;7] (inscriptions dongle) et MPSSE

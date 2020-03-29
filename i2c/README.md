@@ -21,13 +21,16 @@ pins en i²c: CLK SDA et l'alim
 
 
 	
-# lis3mdl (magnetometer pour compass boussole) ***en cours***
-https://www.st.com/resource/en/datasheet/lis3mdl.pdf 
+# lis3mdl (magnetometer compass boussole) 
 
-VDD pour 3v3 (pas VIN)
+Alim 3v3 = pin "VDD" (pas VIN)
 pin "SDA"=DATA (attantion voir ci dessus astuce FTDI: il faut relier SDA à D1 ET D2))
 pin "SDO" permet de changer d'adresse si on le connecte au GND (DS page 17). Je suppose pour avoir 2 puces sur le même bus?
-
 LIS3MDL_SA1_HIGH_ADDRESS   0011110 ->0x1E
 LIS3MDL_SA1_LOW_ADDRESS    0011100 ->0x1C
+
+deux scripts python pour ce sensor:
+rpi_i2c_lis3mdl.py -> raspberry pi -> utilise pigpio
+i2c_pyftdi_lis3mdl.py -> ftdi -> pyftdi 
+
 
