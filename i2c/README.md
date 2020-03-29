@@ -14,9 +14,23 @@ pins en i²c: CLK SDA et l'alim
 		(https://eblot.github.io/pyftdi/api/i2c.html#i2c-wiring et https://eblot.github.io/pyftdi/pinout.html)	
 	
 	i2cscan.py (équivalent de i2cdetect) est ici:
-		https://github.com/eblot/pyftdi/tree/master/pyftdi/bin
+		git clone https://github.com/eblot/pyftdi.git --> dans pyftdi/bin/
+		Faut parfois bricoler un peu: 
+			gérer un import manquant (mais inutile: from pyftdi.misc import add_custom_devices) --> commenter
+		Interprétation:
+		
+				# ./i2cscan.py ftdi://ftdi:2232:1:58/1
+		    0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F 
+		 0: .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+		 1: .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+		 2: .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+		 3: .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+		 4: X  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+		 5: .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+		 6: .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+		 7: .  .  .  .  .  .  .  .  .
 
-
+			adresse = 0x40
 
 
 
@@ -29,8 +43,8 @@ pin "SDO" permet de changer d'adresse si on le connecte au GND (DS page 17). Je 
 LIS3MDL_SA1_HIGH_ADDRESS   0011110 ->0x1E
 LIS3MDL_SA1_LOW_ADDRESS    0011100 ->0x1C
 
-deux scripts python pour ce sensor:
-rpi_i2c_lis3mdl.py -> raspberry pi -> utilise pigpio
-i2c_pyftdi_lis3mdl.py -> ftdi -> pyftdi 
+Mes deux scripts python pour ce sensor:
+	rpi_i2c_lis3mdl.py -> raspberry pi -> utilise pigpio
+	i2c_pyftdi_lis3mdl.py -> ftdi -> pyftdi 
 
 
