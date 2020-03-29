@@ -38,10 +38,8 @@ Commandes: Aliexpress (11-19, ...)
 
 Première commande: 2019 (Kloug's) chez Aliexpress -> Semtech SX1276/77/78/79 based boards + breakout boards LoRa chez Tindie (cf projet partagé klougien sur gitlab "LORA - Node to Node")
 
-Soudure
-1) module 2) antenne 3) pinouts
-RFM95 -> si les castellated vias merdés à la pâte, possible de faire au fer à souder classique: réussi au moins une fois en janvier 2020 (j'avais pas le pistolet à air chaud encore)
-Connecteurs d'antennes: flux + mini boule au bout de la panne à appliquer direct avec la panne (pas l'étaim direct).
+Soudure update 2020
+RFM95 -> direct fer classique, pas la peine de se faire chier à la pâte à souder
 
 
 
