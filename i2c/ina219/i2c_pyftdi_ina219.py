@@ -8,6 +8,7 @@
 from pyftdi.i2c import I2cController, I2cNackError
 from binascii import hexlify
 import time
+import sys
 
 
 
@@ -21,6 +22,7 @@ CONFIG_ADDR 	 = 0x00
 SHUNT_VOLT_ADDR	 = 0x01
 BUS_VOLT_ADDR 	 = 0x02 
 CURRENT_ADDR 	 = 0x04 
+CALIBRATION_ADDR = 0x05
 
 
 #initialisation du bus, de la puce FTDI
@@ -36,18 +38,29 @@ slave = ctrl.get_port(0x40) #l'adresse sur le bus, i2cdetect (i2c-tools) ou i2cs
 data = slave.read_from(CONFIG_ADDR,2)
 print("{:#010b} {:#010b}".format(data[0], data[1]))
 CONFIG = data[0] << 8 | data[1] 
-print("{:x}".format(CONFIG)) #pour contrôle: au reset doit être à 399f
+#print("{:x}".format(CONFIG)) #pour contrôle: au reset doit être à 399f
 
 #print(twos_comp(int('1000001100000000',2)))
 
 
 #Le voltage du BUS a les 3 LSB qui ne holdent pas de value (DS p.23) . Il faut bricoler surement
 
+#Piste calibration
+#J'ai du courant toujours à zero. Alors que le voltage = OK.
+#https://forums.adafruit.com/viewtopic.php?f=19&t=43434 --> calibration register??? oui apparament il faudrait calibrer...
+#Logique: la resistance sur le breakout vient d'adafruit. Texas Instrument ne fabrique que l'ina219. Il faut dire à l'ina
+#quelle est la valeur de la résistance.
+#Programming page 5
+#La map du register calibration est page 24
+
 
 while(True):
-	data = slave.read_from(SHUNT_VOLT_ADDR,2)
+	data = slave.read_from(CURRENT_ADDR,2)
 	RAW_DATA = data[0] << 8 | data[1]
+	#print("{:#010b} {:#010b}".format(data[0], data[1]))
+	sys.stdout.write("{:#010b} {:#010b}   \r".format( data[0], data[1]))
 	RESULT = twos_comp(RAW_DATA) * .01 #LSB = 4 mv pour le bus, 10 µV pour le shunt. Datasheet p.23
-	print("{:.2f}".format(RESULT))
+	#print("{:.2f}".format(RESULT))
 	time.sleep(0.1)
+	
 
