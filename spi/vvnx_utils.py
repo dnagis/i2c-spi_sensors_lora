@@ -19,7 +19,14 @@ def logbdd(data):
 	con.close()
 	
 def parse_rx_data(rx_string):
-	rx=list(rx_string)
-	lat_hex=rx[1:(rx[0]+1)] #'slicing -> récupérer la latitude (la longueur qu'elle occupe est dans rx_string[0]
-	lon_hex=rx[
-
+	rx = list('9105dc77b881dbcca8b') #pour tests
+	#rx=list(rx_string) #'9105dc77b881dbcca8b'
+	lat_hex_list=rx[1:(int(rx[0])+1)] #[x:y] = slicing -> récupérer la latitude (la longueur qu'elle occupe est dans rx_string[0])
+	lng_offset=int(rx[0])+1 #offset longitude: après rx[0] + bytes occupés par la latitude
+	lng_len=int(rx[lng_offset]) #taille de la lng est là (après ce qui concerne la lat)
+	lng_hex_list=rx[lng_offset+1:lng_offset+1+lng_len] #récupération de la longitude (le slicing marche pas par size hélas)
+	lat_hex=''.join(lat_hex_list) #transormation en string
+	lng_hex=''.join(lng_hex_list)
+	lat = int(lat_hex, 16) / 100000000.0 #transormation en float, décodage de ce qui a été fait dans LocGatt
+	lng = int(lng_hex, 16) / 100000000.0
+	
