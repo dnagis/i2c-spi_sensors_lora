@@ -104,6 +104,11 @@ https://github.com/Inteform/esp32-lora-library (pas évident d'adapter librairie
 	ou
 	cp -af esp32-lora-library/components/lora $ESP-IDF/components/  (tu peux aussi le copier dans ton projet/components je crois)
 	les codes pour Tx/Rx sont dans leur README.md
+	
+Pour lora + gatt pas de difficulté particulière prendre bluetooth/bluedroid/ble/gatt_server, ajouter le dir components/ de lora  
+	initialisation (int(), set_frequ(), crc,) ->
+		pour l'envoi, par exemple dans ESP_GATTS_WRITE_EVT:
+	lora_send_packet(param->write.value, param->write.len);
 
 Connexions: *********ATTENTION PINS ESP32 ET LORA: RISQUE DE MOMENTS DE SOLITUDE+++++***********
 config numéros GPIO ça se fait en menuconfig (dans components/lora) 
