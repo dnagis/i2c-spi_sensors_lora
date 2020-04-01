@@ -17,4 +17,9 @@ def logbdd(data):
 	cur.execute("insert into log (epoch, data) values (?, ?)", values)
 	con.commit()
 	con.close()
+	
+def parse_rx_data(rx_string):
+	rx=list(rx_string)
+	lat_hex=rx[1:(rx[0]+1)] #'slicing -> récupérer la latitude (la longueur qu'elle occupe est dans rx_string[0]
+	lon_hex=rx[
 
