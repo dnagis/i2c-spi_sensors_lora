@@ -37,13 +37,15 @@ slave = ctrl.get_port(0x40) #l'adresse sur le bus, i2cdetect (i2c-tools) ou i2cs
 #http://henrysbench.capnfatz.com/henrys-bench/arduino-current-measurements/ina219-arduino-current-sensor-voltmeter-tutorial-quick-start/
 
 data = slave.read_from(CONFIG_ADDR,2)
-CONFIG = data[0] << 8 | data[1] 
+CONFIG = data[0] << 8 | data[1] #data[0] -> byte du haut (most significant)
 print("config = {:#010b} {:#010b} ({:x})".format(data[0], data[1], CONFIG)) #pour contrôle: au reset doit être à 399f
 
+
+#hex(int('0011100110011111',2)) -> 0x399f
 #print(twos_comp(int('1000001100000000',2)))
 
 
-#slave.write_to(CONFIG_ADDR, b'\x00\x00') 
+#slave.write_to(CONFIG_ADDR, b'\x00\x00') -> c'est ce format qu'il faut pour écrire dans le register
 
 
 #Piste calibration
@@ -58,43 +60,48 @@ max_possible_amps = 32 / 100 #j'adapte. -> 32V de range
 current_lsb = max_possible_amps / 32767
 calibration = trunc(0.04096 / (current_lsb * 100)) #DS p.12 + ina219.py li 302
 
+
+
+#ToDo calibration:
+#trouver la valeur de la résistance du breakout, ma mesure??? -> je trouve 100 milli ohms
+#Trouver comment écrire la calibration dans le register en prenant compte que le premier bit est à 0
+#	 (DS? librairie?)
+
+
+
+
+
+
+
+
+
+
+
 print("calibration= 0x{:x} decimal {:d}".format(calibration, calibration))
 
+#int.to_bytes(length, byteorder, *, signed=False) (41).to_bytes(2, byteorder='big') Créer un bytearray de taille 2 
 
-
-
-
-
-
-#c'est pas possible de laisser comme ça il faut créer un bytearray de size 2 mais le remplir correctement 
-#	(quand ta calibration dépassera un byte)
-
-
-cal_to_write = bytearray(2)
-cal_to_write[1] = calibration
-
-
-#Ensuite faut vérifier que la calibration est OK.
-
-
-
+cal_to_write = calibration.to_bytes(2, byteorder='big') 
+print("bits calibration qu'on va ecrire: {:08b} {:08b}".format(cal_to_write[0], cal_to_write[1]))
+#Ecrire la calibration dans le register
+#Attention le bit0 "is a void bit and always be 0: calibration is the value stored in FS:15:FS1 DS p 24
 
 slave.write_to(CALIBRATION_ADDR, cal_to_write)
-time.sleep(0.1)
+time.sleep(0.5)
 calib_reg = slave.read_from(CALIBRATION_ADDR,2)
 CALIB_REG = calib_reg[0] << 8 | calib_reg[1]
-print("calibration reg = {:#010b} {:#010b} ({:x})".format(calib_reg[0], calib_reg[1], CALIB_REG)) 
+print("calibration reg lecture = {:#010b} {:#010b} ({:x})".format(calib_reg[0], calib_reg[1], CALIB_REG)) 
 
 
 
-while(True):
-	data = slave.read_from(CURRENT_ADDR,2)
-	RAW_DATA = data[0] << 8 | data[1]
-	#print("{:#010b} {:#010b}".format(data[0], data[1]))
-	sys.stdout.write("current = {:#010b} {:#010b}   \r".format( data[0], data[1]))
-	#RESULT = twos_comp(RAW_DATA) * .01 #LSB = 4 mv pour le bus, 10 µV pour le shunt. Datasheet p.23
-	#print("{:.2f}".format(RESULT))
-	time.sleep(0.1)
+#while(True):
+#	data = slave.read_from(CURRENT_ADDR,2)
+#	RAW_DATA = data[0] << 8 | data[1]
+#	#print("{:#010b} {:#010b}".format(data[0], data[1]))
+#	sys.stdout.write("current = {:#010b} {:#010b}   \r".format( data[0], data[1]))
+#	#RESULT = twos_comp(RAW_DATA) * .01 #LSB = 4 mv pour le bus, 10 µV pour le shunt. Datasheet p.23
+#	#print("{:.2f}".format(RESULT))
+#	time.sleep(0.1)
 	
 
 #Le voltage du BUS a les 3 LSB qui ne holdent pas de value: DS p 12 le dit en bas + p.23 il faut shifter pour avoir valeurs
