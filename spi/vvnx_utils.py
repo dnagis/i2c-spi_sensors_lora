@@ -10,11 +10,14 @@ def logbdd(rx_string):
 	#décodage latlng à partir de mon encodage locgatt type '9105dc77b881dbcca8b' (9=length latitude, 8=length longitude)
 	#rx = list('9105dc77b881dbcca8b') #pour tests
 	rx=list(rx_string) #'9105dc77b881dbcca8b'
-	if rx[0] == 9:
-		return
-	lat_hex_list=rx[1:(int(rx[0])+1)] #[x:y] = slicing -> récupérer la latitude (la longueur qu'elle occupe est dans rx_string[0])
+	lat_len=int(rx[0])
+	if len(rx) < lat_len + 2: #protection contre messages pas à moi (plante si rx[N] avec un N n'existant pas
+		return	
+	lat_hex_list=rx[1:(lat_len+1)] #[x:y] = slicing -> récupérer la latitude (la longueur qu'elle occupe est dans rx_string[0])
 	lng_offset=int(rx[0])+1 #offset longitude: après rx[0] + bytes occupés par la latitude
-	lng_len=int(rx[lng_offset]) #taille de la lng est là (après ce qui concerne la lat)
+	lng_len=int(rx[lng_offset]) #taille de la lng est là (après la lat)
+	if len(rx) != lat_len + lng_len + 2: #protection contre messages pas à moi
+		return	
 	lng_hex_list=rx[lng_offset+1:lng_offset+1+lng_len] #récupération de la longitude (le slicing marche pas par size hélas)
 	lat_hex=''.join(lat_hex_list) #transormation en string
 	lng_hex=''.join(lng_hex_list)
