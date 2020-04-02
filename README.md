@@ -20,8 +20,8 @@ libmpsse-1.3 (pour SPI)
 	builder les exemples dans libmpsse: CFLAGS=-I/usr/include/libftdi1 CC=gcc make
 	
 pyftdi (i²c et spi OK)
-	pip install pyftdi -> les exemples sont en python3. je pense que tout est en python3.
-	**VERIFIER L'INSTALL PYFTDI: fait pendant le confinement, idées moyennement claires**
+	python3
+	pip3 install pyftdi
 	**ATTENTION PINOUT PYFTDI** pour i2c sur FT2232H il faut connecter AD1 et AD2 ensembles (https://eblot.github.io/pyftdi/pinout.html)
 	https://github.com/eblot/pyftdi --> tests/
 	spi/lora_pyftdi.py
