@@ -3,6 +3,7 @@
 
 #ina219
 #https://github.com/chrisb2/pi_ina219/
+#https://github.com/chrisb2/pi_ina219.git
 #"PGA" = Programmable Gain Amplifier
 
 from pyftdi.i2c import I2cController, I2cNackError
@@ -67,6 +68,9 @@ calibration = trunc(0.04096 / (current_lsb * 100)) #DS p.12 + ina219.py li 302
 #Trouver comment écrire la calibration dans le register en prenant compte que le premier bit est à 0
 #	 (DS? librairie?)
 
+#ToDo voltage:
+#lire p20-21 pour comprendre comment convertir les bits en la valeur en volt
+#est ce que deux voltmètres aux mêmes noeuds d'un circuit doivent lire la même chose en même temps???
 
 
 
@@ -93,15 +97,28 @@ CALIB_REG = calib_reg[0] << 8 | calib_reg[1]
 print("calibration reg lecture = {:#010b} {:#010b} ({:x})".format(calib_reg[0], calib_reg[1], CALIB_REG)) 
 
 
+def lire_current():
+	data = slave.read_from(CURRENT_ADDR,2)
+	RAW_DATA = data[0] << 8 | data[1]	
+	#print("{:#010b} {:#010b}".format(data[0], data[1]))
+	sys.stdout.write("current = {:#010b} {:#010b}   \r".format( data[0], data[1]))
+	#RESULT = twos_comp(RAW_DATA) * .01 #LSB = 4 mv pour le bus, 10 µV pour le shunt. Datasheet p.23
+	#print("{:.2f}".format(RESULT))	
 
-#while(True):
-#	data = slave.read_from(CURRENT_ADDR,2)
-#	RAW_DATA = data[0] << 8 | data[1]
-#	#print("{:#010b} {:#010b}".format(data[0], data[1]))
-#	sys.stdout.write("current = {:#010b} {:#010b}   \r".format( data[0], data[1]))
-#	#RESULT = twos_comp(RAW_DATA) * .01 #LSB = 4 mv pour le bus, 10 µV pour le shunt. Datasheet p.23
-#	#print("{:.2f}".format(RESULT))
-#	time.sleep(0.1)
+def lire_voltage():
+	data = slave.read_from(SHUNT_VOLT_ADDR,2)
+	bits_voltage = data[0] << 8 | data[1]
+	#Le voltage du BUS a les 3 LSB qui ne holdent pas de value:
+	#	ref: DS p 12 (en bas) + p.23 et github.com/chrisb2/pi_ina219.git dans ina219.py li. 359
+	bits_voltage = bits_voltage >> 3
+	#volts = bits_voltage * 4 / 1000 --> pas si simple...
+	sys.stdout.write("voltage = {:016b} \r".format(bits_voltage))
 	
 
-#Le voltage du BUS a les 3 LSB qui ne holdent pas de value: DS p 12 le dit en bas + p.23 il faut shifter pour avoir valeurs
+
+while(True):
+	lire_voltage()
+	time.sleep(0.1)
+	
+
+
