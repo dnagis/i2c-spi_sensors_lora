@@ -57,9 +57,9 @@ print("config = {:#010b} {:#010b} ({:x})".format(data[0], data[1], CONFIG)) #pou
 #La map du register calibration est page 24
 
 #max_possible_amps = shunt_volts_max / self._shunt_ohms ina219.py li 283
-max_possible_amps = 32 / 100 #j'adapte. -> 32V de range
-current_lsb = max_possible_amps / 32767
-calibration = trunc(0.04096 / (current_lsb * 100)) #DS p.12 + ina219.py li 302
+#max_possible_amps = 32 / 100 #j'adapte. -> 32V de range
+#current_lsb = max_possible_amps / 32767
+#calibration = trunc(0.04096 / (current_lsb * 100)) #DS p.12 + ina219.py li 302
 
 
 
@@ -74,27 +74,40 @@ calibration = trunc(0.04096 / (current_lsb * 100)) #DS p.12 + ina219.py li 302
 
 
 
+essai = int('0111110100000000',2) 
+print('original:  {:016b}'.format(essai))
+essai -= 1
+print('-1:        {:016b}'.format(essai))
+essai = ( ~essai & 0xFFFF) #obligatoire car les int en python sont signés... ~essai ne suffit pas
+print('inversion: {:016b}'.format(comp))
+print('int:       {:d}'.format(comp))
 
 
+essai = int('7d00', 16) -> 32000
+print('{:016b}'.format(essai)) -> 0111110100000000
+essai -= 1
+print('{:016b}'.format(essai)) -> 0111110011111111
+essai = ( ~essai & 0xFFFF)
+print('{:016b}'.format(essai)) -> 1000001100000000
+print(essai) -> 33536 alors que j'attends 
+
+hypothèse: si le MSB est à 0 -> juste diviser par 100 l'integer récupéré, si le MSB est à 1 faut faire manip???
 
 
-
-
-
-print("calibration= 0x{:x} decimal {:d}".format(calibration, calibration))
+#print("calibration= 0x{:x} decimal {:d}".format(calibration, calibration))
 
 #int.to_bytes(length, byteorder, *, signed=False) (41).to_bytes(2, byteorder='big') Créer un bytearray de taille 2 
 
-cal_to_write = calibration.to_bytes(2, byteorder='big') 
-print("bits calibration qu'on va ecrire: {:08b} {:08b}".format(cal_to_write[0], cal_to_write[1]))
+#cal_to_write = calibration.to_bytes(2, byteorder='big') 
+#print("bits calibration qu'on va ecrire: {:08b} {:08b}".format(cal_to_write[0], cal_to_write[1]))
 #Ecrire la calibration dans le register
 #Attention le bit0 "is a void bit and always be 0: calibration is the value stored in FS:15:FS1 DS p 24
 
-slave.write_to(CALIBRATION_ADDR, cal_to_write)
-time.sleep(0.5)
-calib_reg = slave.read_from(CALIBRATION_ADDR,2)
-CALIB_REG = calib_reg[0] << 8 | calib_reg[1]
-print("calibration reg lecture = {:#010b} {:#010b} ({:x})".format(calib_reg[0], calib_reg[1], CALIB_REG)) 
+#slave.write_to(CALIBRATION_ADDR, cal_to_write)
+#time.sleep(0.5)
+#calib_reg = slave.read_from(CALIBRATION_ADDR,2)
+#CALIB_REG = calib_reg[0] << 8 | calib_reg[1]
+#print("calibration reg lecture = {:#010b} {:#010b} ({:x})".format(calib_reg[0], calib_reg[1], CALIB_REG)) 
 
 
 def lire_current():
@@ -116,9 +129,9 @@ def lire_voltage():
 	
 
 
-while(True):
-	lire_voltage()
-	time.sleep(0.1)
+#while(True):
+#	lire_voltage()
+#	time.sleep(0.1)
 	
 
 
