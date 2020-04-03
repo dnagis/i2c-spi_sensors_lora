@@ -5,12 +5,13 @@ import sqlite3
 import time
 
 #Appelé par rpi_lora_spidev.py
+
 	
 def logbdd(rx_string):
 	#décodage latlng à partir de mon encodage locgatt type '9105dc77b881dbcca8b' (9=length latitude, 8=length longitude)
 	#rx = list('9105dc77b881dbcca8b') #pour tests
-	rx=list(rx_string) #'9105dc77b881dbcca8b'	
-	if not rx[0].isdigit(): #si ü'¶3$¶õr-ðñ+Km.... invalid literal for int() with base 10: '\xfc'
+	rx=list(rx_string) #exemple: '9105dc77b881dbcca8b'	
+	if not rx[0].isdigit(): #protection contre: invalid literal for int() with base 10: '\xfc'
 		return
 	lat_len=int(rx[0])
 	if len(rx) < lat_len + 2: #protection contre messages pas à moi (plante si rx[N] avec un N n'existant pas

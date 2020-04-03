@@ -33,7 +33,7 @@ def lecture_rx():
 	out = spi.xfer(bytearray(rx_len+1)) #astuce: le premier byte = REG_00_FIFO = 0x00 "FIFO r/w access"
 	rx_string = "".join(map(chr, out[1:])) #on enleve le premier byte
 	print 'on a recu: {:s}'.format(rx_string) #<type 'list'>
-	if len(rx_string) != 0: #protection de messages qui font planter avec IndexError: string index out of range
+	if len(rx_string) != 0 and rx_string.isalnum(): #protection de messages qui font planter (IndexError: string index out of range, invalid literal for int() with base 10: '\xfa'...)
 		logbdd(rx_string) 
 
 
