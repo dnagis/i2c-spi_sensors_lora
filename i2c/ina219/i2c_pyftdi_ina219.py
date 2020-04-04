@@ -1,10 +1,13 @@
 #!/usr/bin/python3
 # -*-coding:Latin-1 -*
 
-#ina219
+#INA219 -> current sensor
 #https://github.com/chrisb2/pi_ina219/
 #https://github.com/chrisb2/pi_ina219.git
 #"PGA" = Programmable Gain Amplifier
+#R100 sur la résistance voudrait dire 0.1 ohms. La logique: 100R = 100ohms. R est utilisé comme marqueur de decimal point (moins de risque de se
+#	perdre sur un dessin industriel pendant conversion de taille de fichier). 
+#Le breakout violet de chez adafruit: https://cdn-learn.adafruit.com/downloads/pdf/adafruit-ina219-current-sensor-breakout.pdf
 
 from pyftdi.i2c import I2cController, I2cNackError
 from binascii import hexlify
@@ -36,16 +39,31 @@ ctrl.configure('ftdi://ftdi:2232h/1')
 
 slave = ctrl.get_port(0x40) #l'adresse sur le bus, i2cdetect (i2c-tools) ou i2cscan.py (pyftdi) -> voir le README.md 
 
-#http://henrysbench.capnfatz.com/henrys-bench/arduino-current-measurements/ina219-arduino-current-sensor-voltmeter-tutorial-quick-start/
 
+
+
+
+
+
+
+#Lecture config avant modif
 data = slave.read_from(CONFIG_ADDR,2)
 CONFIG = data[0] << 8 | data[1] #data[0] -> byte du haut (most significant)
-print("config = {:#010b} {:#010b} ({:x})".format(data[0], data[1], CONFIG)) #pour contrôle: au reset doit être à 399f
+print("config avant = {:08b} {:08b} ({:x})".format(data[0], data[1], CONFIG)) #pour contrôle: au reset doit être à 0x399F
 
-
-
-
+#Ecriture nouvelle config
+#default config: 0011100110011111 (399f)
+new_config = int('0011100110011111',2).to_bytes(2,byteorder='big')
 #slave.write_to(CONFIG_ADDR, b'\x00\x00') -> c'est ce format qu'il faut pour écrire dans le register
+slave.write_to(CONFIG_ADDR, new_config)
+
+
+#Lecture config après écriture dans le register de config
+data = slave.read_from(CONFIG_ADDR,2)
+CONFIG = data[0] << 8 | data[1] #data[0] -> byte du haut (most significant)
+print("config apres = {:08b} {:08b} ({:x})".format(data[0], data[1], CONFIG)) #pour contrôle: au reset doit être à 0x399F
+
+
 
 
 #Calibration
@@ -94,18 +112,18 @@ def lire_current():
 
 
 #ToDo voltage:
-#comparaison voltmètre
+#Changement de gain comprendre
 
 
 
 #Bien distinguer le voltage du BUS et celui du SHUNT
-#Voltage shunt: 
+#Voltage Shunt: 
 #avec le gain par défaut ( PGA= /8 ) c'est le cas de la figure 20 DS. p.21. Seul un bit (le MSB) contient le sign.
 #j'obtiens la correspondance bits<->voltage décrite pp.21 et tableau p. 22 en faisant un twos_complement
 def lire_voltage_shunt():
 	data = slave.read_from(SHUNT_VOLT_ADDR,2)
 	RAW_BITS = data[0] << 8 | data[1]
-	sys.stdout.write("voltage = {:016b} {:.02f}\r".format(RAW_BITS, twos_comp(RAW_BITS) / 100))
+	sys.stdout.write("voltage = {:016b} {:.02f}mV\r".format(RAW_BITS, twos_comp(RAW_BITS) / 100)) #Comparer à la lecture au voltmètre sur les bornes de la résistance du shunt ("R100")
 
 
 #def lire_voltage_bus():	
