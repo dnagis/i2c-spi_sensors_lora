@@ -13,7 +13,8 @@ import time
 import sys
 
 
-
+#2' complement pour 16 bits: si le MSB est != 0 (ligne 1) c'est une valeur négative:
+# dans ce cas on renvoie val - (0xFFFF + 1) (c'est à dire 1<<16)
 def twos_comp(val):
     if (val & (1 << (16 - 1))) != 0: 
         val = val - (1 << 16)        
@@ -42,14 +43,12 @@ CONFIG = data[0] << 8 | data[1] #data[0] -> byte du haut (most significant)
 print("config = {:#010b} {:#010b} ({:x})".format(data[0], data[1], CONFIG)) #pour contrôle: au reset doit être à 399f
 
 
-#hex(int('0011100110011111',2)) -> 0x399f
-#print(twos_comp(int('1000001100000000',2)))
 
 
 #slave.write_to(CONFIG_ADDR, b'\x00\x00') -> c'est ce format qu'il faut pour écrire dans le register
 
 
-#Piste calibration
+#Calibration
 #J'ai du courant toujours à zero, normal selon DS: il faut remplir calibration register
 #Logique: la resistance sur le breakout vient d'adafruit. Texas Instrument ne fabrique que l'ina219. Il faut dire à l'ina
 #quelle est la valeur de la résistance.
@@ -61,37 +60,12 @@ print("config = {:#010b} {:#010b} ({:x})".format(data[0], data[1], CONFIG)) #pou
 #current_lsb = max_possible_amps / 32767
 #calibration = trunc(0.04096 / (current_lsb * 100)) #DS p.12 + ina219.py li 302
 
-
-
 #ToDo calibration:
 #trouver la valeur de la résistance du breakout, ma mesure??? -> je trouve 100 milli ohms
 #Trouver comment écrire la calibration dans le register en prenant compte que le premier bit est à 0
 #	 (DS? librairie?)
 
-#ToDo voltage:
-#lire p20-21 pour comprendre comment convertir les bits en la valeur en volt
-#est ce que deux voltmètres aux mêmes noeuds d'un circuit doivent lire la même chose en même temps???
 
-
-
-essai = int('0111110100000000',2) 
-print('original:  {:016b}'.format(essai))
-essai -= 1
-print('-1:        {:016b}'.format(essai))
-essai = ( ~essai & 0xFFFF) #obligatoire car les int en python sont signés... ~essai ne suffit pas
-print('inversion: {:016b}'.format(comp))
-print('int:       {:d}'.format(comp))
-
-
-essai = int('7d00', 16) -> 32000
-print('{:016b}'.format(essai)) -> 0111110100000000
-essai -= 1
-print('{:016b}'.format(essai)) -> 0111110011111111
-essai = ( ~essai & 0xFFFF)
-print('{:016b}'.format(essai)) -> 1000001100000000
-print(essai) -> 33536 alors que j'attends 
-
-hypothèse: si le MSB est à 0 -> juste diviser par 100 l'integer récupéré, si le MSB est à 1 faut faire manip???
 
 
 #print("calibration= 0x{:x} decimal {:d}".format(calibration, calibration))
@@ -118,20 +92,29 @@ def lire_current():
 	#RESULT = twos_comp(RAW_DATA) * .01 #LSB = 4 mv pour le bus, 10 µV pour le shunt. Datasheet p.23
 	#print("{:.2f}".format(RESULT))	
 
-def lire_voltage():
+
+#ToDo voltage:
+#comparaison voltmètre
+
+
+
+#Bien distinguer le voltage du BUS et celui du SHUNT
+#Voltage shunt: 
+#avec le gain par défaut ( PGA= /8 ) c'est le cas de la figure 20 DS. p.21. Seul un bit (le MSB) contient le sign.
+#j'obtiens la correspondance bits<->voltage décrite pp.21 et tableau p. 22 en faisant un twos_complement
+def lire_voltage_shunt():
 	data = slave.read_from(SHUNT_VOLT_ADDR,2)
-	bits_voltage = data[0] << 8 | data[1]
+	RAW_BITS = data[0] << 8 | data[1]
+	sys.stdout.write("voltage = {:016b} {:.02f}\r".format(RAW_BITS, twos_comp(RAW_BITS) / 100))
+
+
+#def lire_voltage_bus():	
 	#Le voltage du BUS a les 3 LSB qui ne holdent pas de value:
 	#	ref: DS p 12 (en bas) + p.23 et github.com/chrisb2/pi_ina219.git dans ina219.py li. 359
-	bits_voltage = bits_voltage >> 3
-	#volts = bits_voltage * 4 / 1000 --> pas si simple...
-	sys.stdout.write("voltage = {:016b} \r".format(bits_voltage))
-	
 
-
-#while(True):
-#	lire_voltage()
-#	time.sleep(0.1)
+while(True):
+	lire_voltage_shunt()
+	time.sleep(0.1)
 	
 
 

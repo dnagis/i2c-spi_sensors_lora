@@ -1,0 +1,32 @@
+bit strings
+binary strings
+
+
+essai = int('0111110100000000',2) 
+print('original:  {:016b}'.format(essai))
+essai -= 1
+print('-1:        {:016b}'.format(essai))
+essai = ( ~essai & 0xFFFF) #obligatoire car les int en python sont signés... ~essai ne suffit pas
+print('inversion: {:016b}'.format(comp))
+print('int:       {:d}'.format(comp))
+
+
+essai = int('7d00', 16) -> 32000
+print('{:016b}'.format(essai)) -> 0111110100000000
+essai -= 1
+print('{:016b}'.format(essai)) -> 0111110011111111
+essai = ( ~essai & 0xFFFF)
+print('{:016b}'.format(essai)) -> 1000001100000000
+print(essai) -> 33536 alors que j'attends ???
+
+
+
+#checker si le MSB est à 1:
+val = int('0111110100000000',2)
+val & (1 << 15) -> 0 #le bit 16 n'est pas à 1
+val = int('1001110100000000',2)
+val & (1 << 15) > 0 #le bit 16 est à 1
+
+
+hex(int('0011100110011111',2)) -> 0x399f
+
