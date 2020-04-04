@@ -6,6 +6,11 @@ import time
 
 #Appelé par rpi_lora_spidev.py
 
+
+##ToDo: protéger erreurs de réceptions: 
+#lat = int(lat_hex, 16) / 100000000.0 #transormation en float, décodage de ce qui a été fait dans LocGatt
+#ValueError: invalid literal for int() with base 16: '105df15ja'
+
 	
 def logbdd(rx_string):
 	#décodage latlng à partir de mon encodage locgatt type '9105dc77b881dbcca8b' (9=length latitude, 8=length longitude)

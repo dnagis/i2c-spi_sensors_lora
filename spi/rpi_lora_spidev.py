@@ -9,8 +9,11 @@ import spidev
 from time import sleep
 from vvnx_utils import logbdd
 
-
-
+#Attention à garder+++ :Pour avoir du log quand crash sur le rpi n'importe quand:
+#./rpi_lora_spidev.py &>log_crash & disown
+#	et bien savoir que log_crash ne sera accessible qu'après le crash. Donc les print() de fonctionnement normal ne seront 
+#	visibles qu'une fois que l'appli aura lâché les fd vers le fichier (donc inutile de lire log_crash juste après avoir
+#	lancé la commande: faut se barrer et attendre)
 
 
 FXOSC = 32000000.0
@@ -33,7 +36,7 @@ def lecture_rx():
 	out = spi.xfer(bytearray(rx_len+1)) #astuce: le premier byte = REG_00_FIFO = 0x00 "FIFO r/w access"
 	rx_string = "".join(map(chr, out[1:])) #on enleve le premier byte
 	print 'on a recu: {:s}'.format(rx_string) #<type 'list'>
-	if len(rx_string) != 0 and rx_string.isalnum(): #protection de messages qui font planter (IndexError: string index out of range, invalid literal for int() with base 10: '\xfa'...)
+	if len(rx_string) != 0 and rx_string.isalnum(): #protection de messages qui font planter
 		logbdd(rx_string) 
 
 
