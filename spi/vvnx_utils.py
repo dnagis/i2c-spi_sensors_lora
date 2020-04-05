@@ -3,13 +3,18 @@
 
 import sqlite3
 import time
+import string
+
 
 #Appelé par rpi_lora_spidev.py
 
 
-##ToDo: protéger erreurs de réceptions: 
+##ToDo: protection contre: 
 #lat = int(lat_hex, 16) / 100000000.0 #transormation en float, décodage de ce qui a été fait dans LocGatt
 #ValueError: invalid literal for int() with base 16: '105df15ja'
+def check_hex(s):
+	return all(c in string.hexdigits for c in s)
+
 
 	
 def logbdd(rx_string):
@@ -29,6 +34,8 @@ def logbdd(rx_string):
 	lng_hex_list=rx[lng_offset+1:lng_offset+1+lng_len] #récupération de la longitude (le slicing marche pas par size hélas)
 	lat_hex=''.join(lat_hex_list) #transormation en string
 	lng_hex=''.join(lng_hex_list)
+	if not (check_hex(lat_hex) and check_hex(lng_hex)):
+		return	
 	lat = int(lat_hex, 16) / 100000000.0 #transormation en float, décodage de ce qui a été fait dans LocGatt
 	lng = int(lng_hex, 16) / 100000000.0
 	print "on va ecrire", lat, lng
