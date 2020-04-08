@@ -2,21 +2,31 @@
 # -*-coding:Latin-1 -*
 
 #INA219 -> current sensor
-#https://github.com/chrisb2/pi_ina219/
-#https://github.com/chrisb2/pi_ina219.git
+
+
+
 #"PGA" = Programmable Gain Amplifier
 #Le breakout violet de chez adafruit: https://cdn-learn.adafruit.com/downloads/pdf/adafruit-ina219-current-sensor-breakout.pdf
 #la resistance Rshunt sur le breakout vient d'adafruit. Texas Instrument ne fabrique que l'ina219. 
-#"R100" ("R" est the decimal place) sur la résistance =>  0.1 ohms. La logique: 100R = 100ohms. R est utilisé comme marqueur de decimal point (moins de risque de se
+#"R100" sur la résistance du breakout =>  0.1 ohms. La logique: 100R = 100ohms ( R est utilisé comme marqueur de decimal point: historique = moins de risque de se
 #	perdre sur un dessin industriel pendant conversion de taille de fichier). 
 
+#Les règles à connaître absolument (pour un circuit en série - series circuit):
+#	https://www.allaboutcircuits.com/textbook/direct-current/chpt-5/simple-series-circuits/
+#	
+#	-The amount of current in a series circuit is the same through any component in the circuit. -> la mesure de I en n'importe quel point du circuit (en série) sera la même
+#	
+#	-Loi d'additivité des tensions = Kirchoff's voltage law -> la somme des voltage drops par composant est nulle (alimentation et différents composants)
+	
+#Pour les essais: en série: une pile de 9V, une led, et une ***PETITE*** résistance (pas 4k7 -> la led ne s'allumera pas), plutôt de l'ordre de 200R (200 ohms)
 
-
+#N.B. Le multimètre jaune a le fuse de 250 mA grillé très probablement: il faut lire avec le fuse 10A (borne de gauche)
+#	https://github.com/chrisb2/pi_ina219.git
 
 #ToDo
-#Measure du current. Comme référence il me faut la lecture avec le multimètre. Avec la LED qui s'allume! 
-#Et démystifier: est ce que l'intensité mesurée en n'importe quel
-#endroit du circuit est censée être identique? Et est ce que je peux calculer l'intensité attendue? Après s'attaquer aux calculs de la calibration ina219.
+#Measure du current -> comprendre la calibration: pourquoi j'ai pas U*R
+#Acheter un multimètre dès que je peux
+
 
 
 
@@ -115,11 +125,11 @@ print("calibration reg lecture = {:#010b} {:#010b} ({:x})".format(calib_reg[0], 
 #En cours!
 def lire_current():
 	data = slave.read_from(CURRENT_ADDR,2)
-	RAW_DATA = data[0] << 8 | data[1]	
+	BITS_CUR = data[0] << 8 | data[1]	
 	#print("{:#010b} {:#010b}".format(data[0], data[1]))
 	#sys.stdout.write("current = {:#010b} {:#010b}   \r".format( data[0], data[1]))
-	RESULT = twos_comp(RAW_DATA) * current_lsb * 1000 #Datasheet p.23
-	sys.stdout.write("{:.2f} \r".format(RESULT))	
+	CURRENT = twos_comp(BITS_CUR) * current_lsb * 1000 #Datasheet p.23 et ina219 -> return self._current_register() * self._current_lsb * 1000 """Return the bus current in milliamps.
+	sys.stdout.write(" current = {:.2f} mA    \r".format(CURRENT))	
 
 
 
@@ -130,8 +140,9 @@ def lire_current():
 #j'obtiens la correspondance bits <-> voltage décrite pp.21 et tableau p. 22 en faisant un twos_complement
 def lire_voltage_shunt():
 	data = slave.read_from(SHUNT_VOLT_ADDR,2)
-	RAW_BITS = data[0] << 8 | data[1]
-	sys.stdout.write("voltage = {:016b} {:.02f}mV\r".format(RAW_BITS, twos_comp(RAW_BITS) / 100)) #Comparer à la lecture au voltmètre sur les bornes de la résistance du shunt ("R100")
+	BITS_VOLTS = data[0] << 8 | data[1]	
+	#Comparer à la lecture au voltmètre sur les bornes de la résistance du shunt ("R100")
+	sys.stdout.write("voltage = {:.02f}mV".format(twos_comp(BITS_VOLTS) / 100)) #pour voir les bits: {:016b}
 
 
 #def lire_voltage_bus():	
@@ -139,8 +150,8 @@ def lire_voltage_shunt():
 	#	ref: DS p 12 (en bas) + p.23 et github.com/chrisb2/pi_ina219.git dans ina219.py li. 359
 
 while(True):
+	lire_voltage_shunt()
 	lire_current()
-	#lire_voltage_shunt()
 	time.sleep(0.1)
 	
 
