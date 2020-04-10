@@ -96,7 +96,8 @@ print("config apres = {:08b} {:08b} ({:x})".format(data[0], data[1], CONFIG)) #p
 
 #max_possible_amps = shunt_volts_max / self._shunt_ohms ina219.py li 283
 max_possible_amps = 32 * 10 #j'adapte. -> 32V de range
-current_lsb = max_possible_amps / 32767
+current_lsb = max_possible_amps / 32767 #Pourquoi 2^15 et pas 2^16? Parce que la vrai équation devrait être range_amp(i.e. de -max_amp à +max_amp) / 2^16 
+	#mais ils ont simplifié en réduisant à la valeur positive de max expected current, donc le dénominateur n'est plus la totalité des bits disponibles (2^16) mais la moitié (2^15)
 calibration = trunc(0.04096 / (current_lsb * 0.1)) #DS p.12 + ina219.py li 302
 
 
