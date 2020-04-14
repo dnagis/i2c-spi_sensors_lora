@@ -24,8 +24,8 @@
 #	https://github.com/chrisb2/pi_ina219.git
 
 #ToDo
-#Measure du current -> comprendre la calibration: pourquoi j'ai pas U*R
-#Acheter un multimètre dès que je peux
+#Register current -> pourquoi j'ai une allure de valeurs discrètes? il doit y avoir un arrondi qq part qui va pas.
+#Acheter un multimètre dès que je peux pour vérifier les mesures
 
 
 
@@ -86,17 +86,13 @@ CONFIG = data[0] << 8 | data[1] #data[0] -> byte du haut (most significant)
 print("config apres = {:08b} {:08b} ({:x})".format(data[0], data[1], CONFIG)) #pour contrôle: au reset doit être à 0x399F
 
 
+#Calibration: c'est écrit plusieurs fois dans la datasheet: tant que le register de calibration à 0 le current register restera à 0
 
-
-
-#J'ai du courant toujours à zero, normal selon DS: il faut remplir calibration register (par défaut à 0)
-
-#Programming page calibration 5
-#La map du register calibration est page 24
+#Le principe de la calibration c'est de permettre d'ajuster la valeur du courant si on fait des mesures de contrôle (page 13 en haut)
 
 #max_possible_amps = shunt_volts_max / self._shunt_ohms ina219.py li 283
 max_possible_amps = 32 * 10 #j'adapte. -> 32V de range
-current_lsb = max_possible_amps / 32767 #Pourquoi 2^15 et pas 2^16? Parce que la vrai équation devrait être range_amp(i.e. de -max_amp à +max_amp) / 2^16 
+current_lsb = max_possible_amps / 32767 #Pourquoi 2^15 et pas 2^16? Parce que la vraie équation devrait être range_amp(i.e. de -max_amp à +max_amp) / 2^16 
 	#mais ils ont simplifié en réduisant à la valeur positive de max expected current, donc le dénominateur n'est plus la totalité des bits disponibles (2^16) mais la moitié (2^15)
 calibration = trunc(0.04096 / (current_lsb * 0.1)) #DS p.12 + ina219.py li 302
 
@@ -107,7 +103,7 @@ print("calibration= 0x{:x} decimal {:d}".format(calibration, calibration))
 #int.to_bytes(length, byteorder, *, signed=False) (41).to_bytes(2, byteorder='big') #Créer un bytearray de taille 2 
 
 cal_to_write = calibration.to_bytes(2, byteorder='big') 
-print("bits calibration qu'on va ecrire: {:08b} {:08b}".format(cal_to_write[0], cal_to_write[1]))
+#print("bits calibration qu'on va ecrire: {:08b} {:08b}".format(cal_to_write[0], cal_to_write[1]))
 #Ecrire la calibration dans le register
 #le bit0 "is a void bit and always be 0: calibration is the value stored in FS:15:FS1 DS p 24 -> je ne sais pas comment on fait???
 
@@ -115,7 +111,7 @@ slave.write_to(CALIBRATION_ADDR, cal_to_write)
 #time.sleep(0.5)
 calib_reg = slave.read_from(CALIBRATION_ADDR,2)
 CALIB_REG = calib_reg[0] << 8 | calib_reg[1]
-print("calibration reg lecture = {:#010b} {:#010b} ({:x})".format(calib_reg[0], calib_reg[1], CALIB_REG)) 
+print("calibration reg lecture = {:#010b} {:#010b} ({:d})".format(calib_reg[0], calib_reg[1], CALIB_REG)) #j'ai toujours un de moins, surement à cause du bit FS0 dans lequel il est impossible d'écrire 1 (ds p. 24)
 
 
 
@@ -123,19 +119,18 @@ print("calibration reg lecture = {:#010b} {:#010b} ({:x})".format(calib_reg[0], 
 
 
 
-#En cours!
+
 def lire_current():
-	data = slave.read_from(CURRENT_ADDR,2)
-	BITS_CUR = data[0] << 8 | data[1]	
-	#print("{:#010b} {:#010b}".format(data[0], data[1]))
-	#sys.stdout.write("current = {:#010b} {:#010b}   \r".format( data[0], data[1]))
-	CURRENT = twos_comp(BITS_CUR) * current_lsb * 1000 #Datasheet p.23 et ina219 -> return self._current_register() * self._current_lsb * 1000 """Return the bus current in milliamps.
-	sys.stdout.write(" current = {:.2f} mA    \r".format(CURRENT))	
+	lecture = slave.read_from(CURRENT_ADDR,2)
+	BITS_CUR = lecture[0] << 8 | lecture[1]	
+	#tu peux vérifier en regardant twos_comp(BITS_CUR) en {:2f} que une fois la calibration faite, la valeur de current register = (voltage register * calibration / 4096) (ds p. 12 équation 4)
+	CURRENT = twos_comp(BITS_CUR) * current_lsb * 1000 #Datasheet p.23 et ina219. * 1000 pour avoir des mA
+	sys.stdout.write(" current = {:.2f} mA (register: {:2f}) \r".format(CURRENT, twos_comp(BITS_CUR)))	
 
 
 
 #J'arrive à avoir le même output que si je place les contacteurs du multimètre aux bornes de la résistance de shunt sur le breakout
-#Bien distinguer le voltage du BUS et celui du SHUNT (la resistance visible)
+#Bien distinguer dans la datasheet le voltage du BUS et celui du SHUNT (la resistance visible)
 #Voltage Shunt: 
 #avec le gain par défaut ( PGA= /8 ) c'est le cas de la figure 20 DS. p.21. Seul un bit (le MSB) contient le sign.
 #j'obtiens la correspondance bits <-> voltage décrite pp.21 et tableau p. 22 en faisant un twos_complement
@@ -146,9 +141,6 @@ def lire_voltage_shunt():
 	sys.stdout.write("voltage = {:.02f}mV".format(twos_comp(BITS_VOLTS) / 100)) #pour voir les bits: {:016b}
 
 
-#def lire_voltage_bus():	
-	#Le voltage du BUS a les 3 LSB qui ne holdent pas de value:
-	#	ref: DS p 12 (en bas) + p.23 et github.com/chrisb2/pi_ina219.git dans ina219.py li. 359
 
 while(True):
 	lire_voltage_shunt()
