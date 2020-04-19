@@ -23,9 +23,7 @@
 #N.B. Le multimètre jaune a le fuse de 250 mA grillé très probablement: il faut lire avec le fuse 10A (borne de gauche)
 #	https://github.com/chrisb2/pi_ina219.git
 
-#ToDo
-#Register current -> pourquoi j'ai une allure de valeurs discrètes? il doit y avoir un arrondi qq part qui va pas.
-#Acheter un multimètre dès que je peux pour vérifier les mesures
+
 
 
 
@@ -73,6 +71,9 @@ data = slave.read_from(CONFIG_ADDR,2)
 CONFIG = data[0] << 8 | data[1] #data[0] -> byte du haut (most significant)
 print("config avant = {:08b} {:08b} ({:x})".format(data[0], data[1], CONFIG)) #pour contrôle: au reset doit être à 0x399F
 
+
+
+
 #Ecriture nouvelle config
 # default config: 0011100110011111 (399f)
 new_config = int('0011100110011111',2).to_bytes(2,byteorder='big')
@@ -88,10 +89,19 @@ print("config apres = {:08b} {:08b} ({:x})".format(data[0], data[1], CONFIG)) #p
 
 #Calibration: c'est écrit plusieurs fois dans la datasheet: tant que le register de calibration à 0 le current register restera à 0
 
-#Le principe de la calibration c'est de permettre d'ajuster la valeur du courant si on fait des mesures de contrôle (page 13 en haut)
+#Le principe de la calibration (si j'ai bien compris...) c'est de permettre d'ajuster la valeur du courant si on fait des mesures de contrôle (page 13 en haut)
+
+#Une fois la calibration entrée, le chip donne une valeur dans le register current que tu peux calculer et qui est: 
+# (shunt_volt_register * calibration) / 4096  
+# (la valeur du shunt_volt_register n'est pas en volts mais en µV: DS. p. 21)
+
+
 
 #max_possible_amps = shunt_volts_max / self._shunt_ohms ina219.py li 283
-max_possible_amps = 32 * 10 #j'adapte. -> 32V de range
+#Dans les librairies et la ds je vois des chiffres énormes genre 12V ou 32V. Si je mets ça j'ai une résolution minable dans le current register. (si je mets
+#32 -> max possible amps devient 320A !!! du coup la résolution s'adapte à 320A et pour atteindre des modifications significatives avec ça va falloir se lever tôt!
+#donc je mets 1V vu que je m'attends plutôt à mesurer des millivolts dans mes systèmes.
+max_possible_amps = 1 * 10 
 current_lsb = max_possible_amps / 32767 #Pourquoi 2^15 et pas 2^16? Parce que la vraie équation devrait être range_amp(i.e. de -max_amp à +max_amp) / 2^16 
 	#mais ils ont simplifié en réduisant à la valeur positive de max expected current, donc le dénominateur n'est plus la totalité des bits disponibles (2^16) mais la moitié (2^15)
 calibration = trunc(0.04096 / (current_lsb * 0.1)) #DS p.12 + ina219.py li 302
@@ -129,15 +139,15 @@ def lire_current():
 
 
 
-#J'arrive à avoir le même output que si je place les contacteurs du multimètre aux bornes de la résistance de shunt sur le breakout
+#J'arrive à avoir le même output que si je place les contacteurs du multimètre aux bornes de la résistance de shunt ("R100") sur le breakout
 #Bien distinguer dans la datasheet le voltage du BUS et celui du SHUNT (la resistance visible)
 #Voltage Shunt: 
 #avec le gain par défaut ( PGA= /8 ) c'est le cas de la figure 20 DS. p.21. Seul un bit (le MSB) contient le sign.
-#j'obtiens la correspondance bits <-> voltage décrite pp.21 et tableau p. 22 en faisant un twos_complement
+#j'obtiens la correspondance bits <-> voltage décrite pp.21 et tableau p. 22 en faisant un twos_complement, et comme un LSB = 10 µV (DS. p.21)
+#il faut diviser par 100 pour avoir des mV
 def lire_voltage_shunt():
 	data = slave.read_from(SHUNT_VOLT_ADDR,2)
 	BITS_VOLTS = data[0] << 8 | data[1]	
-	#Comparer à la lecture au voltmètre sur les bornes de la résistance du shunt ("R100")
 	sys.stdout.write("voltage = {:.02f}mV".format(twos_comp(BITS_VOLTS) / 100)) #pour voir les bits: {:016b}
 
 
