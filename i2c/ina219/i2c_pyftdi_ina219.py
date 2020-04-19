@@ -3,6 +3,9 @@
 
 #INA219 -> current sensor
 
+## ToDo
+#Porter sur le RPi (en attente pour savoir si ce sera en python3)
+
 
 
 #"PGA" = Programmable Gain Amplifier
