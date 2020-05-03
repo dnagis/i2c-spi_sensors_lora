@@ -69,7 +69,7 @@ write_one(0x26 , 0x04) #REG_26_MODEM_CONFIG3
 #	sleep(1)
 	
 ###Tx 
-payload=bytearray(b'hello')
+payload=bytearray(b'9105dc77b881dbcca8b')
 write_one(0x0e , 0x00) #REG_0E_FIFO_TX_BASE_ADDR cf.p35 (si Rx en même temps???)
 write_one(0x0d , 0x00) #REG_0D_FIFO_ADDR_PTR
 slave.exchange(b'\x80' + payload) #premier byte = FIFO_ADDR8_PTR (0x00) oré avec write (0x80) cf p.80

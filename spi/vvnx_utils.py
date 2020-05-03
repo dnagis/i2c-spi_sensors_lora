@@ -1,4 +1,4 @@
-#!/bin/python
+#!/bin/python3
 # -*-coding:Latin-1 -*
 
 import sqlite3
@@ -38,7 +38,7 @@ def logbdd(rx_string):
 		return	
 	lat = int(lat_hex, 16) / 100000000.0 #transormation en float, décodage de ce qui a été fait dans LocGatt
 	lng = int(lng_hex, 16) / 100000000.0
-	print "on va ecrire", lat, lng
+	print("on va ecrire", lat, lng)
 	#écriture dans la base de données
 	#CREATE TABLE log (id INTEGER PRIMARY KEY, epoch INTEGER, lat REAL NOT NULL, lng REAL NOT NULL);
 	#sqlite3 log_lora.db "select datetime(epoch, 'unixepoch', 'localtime'), lat, lng from log;"
