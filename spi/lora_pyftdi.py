@@ -36,20 +36,20 @@ spi = SpiController()
 spi.configure('ftdi://ftdi:2232h/1')
 slave = spi.get_port(cs=0, freq=10E6, mode=0)
 
-write_one(0x0f , 0x00) #REG_0F_FIFO_RX_BASE_ADDR --> p.35. tte la memory FIFO assignee au Rx
+
 
 print("OP_MODE=", format(read_one(0x01), '#010b'))
 write_one(0x01 , 0x80) #0x01 = REG_01_OP_MODE -> 0b10000000 -> long range mode (LoRa) (p 108 )
-sleep(0.1)
+#sleep(0.1)
 write_one(0x01 , 0x01) #mode STDBY (p108)
-sleep(0.1)
+#sleep(0.1)
 
 #set frequency
 frf = int((frf * 1000000.0) / FSTEP)
 write_one(0x06 , (frf >> 16) & 0xff)
 write_one(0x07 , (frf >> 8) & 0xff  )
 write_one(0x08 , frf & 0xff)
-sleep(0.1)
+#sleep(0.1)
 
 #modem config Bw125Cr45Sf128 (0x72, 0x74, 0x04)
 write_one(0x1d , 0x72) #REG_1D_MODEM_CONFIG1
@@ -57,16 +57,26 @@ write_one(0x1e , 0x74) #REG_1E_MODEM_CONFIG2
 write_one(0x26 , 0x04) #REG_26_MODEM_CONFIG3
 
 
-write_one(0x12 , 0xff) #REG_12_IRQ_FLAGS clear ses flags
-
-write_one(0x01 , 0x05) #mode RxContinuous
-
-while True:
+##Rx
+#write_one(0x0f , 0x00) #REG_0F_FIFO_RX_BASE_ADDR --> p.35. tte la memory FIFO assignee au Rx
+#write_one(0x12 , 0xff) #REG_12_IRQ_FLAGS clear ses flags
+#write_one(0x01 , 0x05) #mode RxContinuous
+#while True:
 	#print("IRQ FLAGS:", format(read_one(0x12), '#010b'))  #REG_12_IRQ_FLAGS
-	if(read_one(0x12) & 0x40): # RX_DONE flag is up!
-		lecture_rx()
-		write_one(0x12 , 0xff) #REG_12_IRQ_FLAGS clear ses flags
-	sleep(1)
+#	if(read_one(0x12) & 0x40): # RX_DONE flag is up!
+#		lecture_rx()
+#		write_one(0x12 , 0xff) #REG_12_IRQ_FLAGS clear ses flags
+#	sleep(1)
+	
+###Tx 
+payload=bytearray(b'hello')
+write_one(0x0e , 0x00) #REG_0E_FIFO_TX_BASE_ADDR cf.p35 (si Rx en même temps???)
+write_one(0x0d , 0x00) #REG_0D_FIFO_ADDR_PTR
+slave.exchange(b'\x80' + payload) #premier byte = FIFO_ADDR8_PTR (0x00) oré avec write (0x80) cf p.80
+write_one(0x22 , len(payload)) #REG_22_PAYLOAD_LENGTH
+write_one(0x01 , 0x03) #mode Tx
+sleep(1) #attendre que le Tx se fasse
+write_one(0x01 , 0x01) #revenir en mode STDBY (0x01) (En Tx dapres datasheet p.36 devrait se faire seul)
 
 
 #print(hex(read_one(0x06)))
