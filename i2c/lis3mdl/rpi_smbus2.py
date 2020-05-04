@@ -1,7 +1,8 @@
 #!/bin/python3
 # -*-coding:Latin-1 -*
 
-#lis3mdl (magnetometer)
+#lis3mdl (magnetometer) 
+#en smbus2 pour le rpi, pas pigpio (pas besoin de daemon avec cette librairie)
 
 from smbus2 import SMBus
 import time
@@ -32,14 +33,59 @@ INT_SRC_ADDR     = 0x31
 INT_THS_L_ADDR   = 0x32
 INT_THS_H_ADDR   = 0x33
 
+#voir le script pyftdi lis3mdl pour comment calibrer
+def correction_offset(data):
+	cx = data[0] - ((0.363197895352236 - 0.578193510669395) / 2)
+	cy = data[1] - ((0.143671441099094 - 0.748757673194972) / 2)
+	cz = data[2] - ((0.989330605086232 + 0.106986261327097) / 2)
+	cd = (cx, cy, cz)
+	return cd
+
+def twos_comp(val):
+    if (val & (1 << (16 - 1))) != 0: # if sign bit is set e.g., 8bit: 128-255
+        val = val - (1 << 16)        # compute negative value
+    return val 
+
+def scaled(val):
+	return val / 6842
+	
+def vector_2_degrees(x, y):
+    angle = int(degrees(atan2(x, y)))
+    if angle < 0:
+        angle += 360
+    return angle
+
 
 bus = SMBus(1)
 
-
-print("{:#010b}".format(bus.read_byte_data(SLAVE_ADDR, WHO_AM_I_ADDR)))
+#print("{:#010b}".format(bus.read_byte_data(SLAVE_ADDR, WHO_AM_I_ADDR)))
 
 bus.write_byte_data(SLAVE_ADDR, CTRL_REG1_ADDR, 0x70)
-print("{:#010b}".format(bus.read_byte_data(SLAVE_ADDR, CTRL_REG1_ADDR)))
+print("REG1: {:#010b}".format(bus.read_byte_data(SLAVE_ADDR, CTRL_REG1_ADDR)))
+
+bus.write_byte_data(SLAVE_ADDR, CTRL_REG2_ADDR, 0x00)
+print("REG2: {:#010b}".format(bus.read_byte_data(SLAVE_ADDR, CTRL_REG2_ADDR)))
+bus.write_byte_data(SLAVE_ADDR, CTRL_REG3_ADDR, 0x00)
+print("REG3: {:#010b}".format(bus.read_byte_data(SLAVE_ADDR, CTRL_REG3_ADDR)))
+bus.write_byte_data(SLAVE_ADDR, CTRL_REG4_ADDR, 0x0C)
+print("REG4: {:#010b}".format(bus.read_byte_data(SLAVE_ADDR, CTRL_REG4_ADDR)))
+
+print("REG5: {:#010b}".format(bus.read_byte_data(SLAVE_ADDR, CTRL_REG5_ADDR)))
 
 
 
+
+while(True):
+	MAG_OUT = bus.read_i2c_block_data(SLAVE_ADDR, OUT_X_L_ADDR,6)
+	
+	MAG_X = MAG_OUT[1] << 8 | MAG_OUT[0] #combine high and low bytes
+	MAG_Y = MAG_OUT[3] << 8 | MAG_OUT[2]
+	MAG_Z = MAG_OUT[5] << 8 | MAG_OUT[4]
+	
+	raw_data=(scaled(twos_comp(MAG_X)), scaled(twos_comp(MAG_Y)), scaled(twos_comp(MAG_Z)))
+	
+	cd = correction_offset(raw_data)
+	
+	sys.stdout.write("X={:.6f} Y={:.6f} Z={:.6f} angle={}   \r".format( cd[0], cd[1], cd[2], vector_2_degrees(cd[0],cd[1]) ))
+	time.sleep(0.1)
+	

@@ -8,13 +8,14 @@ pins en i²c: CLK SDA et l'alim
 	lancer pigpiod, astuce: ifconfig lo 127.0.0.1 sinon pigpio.py -- socket.create_connection((localhost, 8888), None) -- plante (hang longtemps+++)
 	
 ## pyftdi
-	c''est du python3 MAIS c''est bien documenté
+	python3, bien documenté
 	pip install pyftdi (je suppose qu'il faut que les librairies mpsse et ftdi soient installées)
 	
 	**ATTENTION BIG TRICK** pour i2c sur FT2232H il faut connecter AD1 et AD2 ensembles et au SDA du slave 
-		(https://eblot.github.io/pyftdi/api/i2c.html#i2c-wiring et https://eblot.github.io/pyftdi/pinout.html)	
+		(https://eblot.github.io/pyftdi/api/i2c.html#i2c-wiring et https://eblot.github.io/pyftdi/pinout.html)
+	SCL <-> AD0	
 	
-	i2cscan.py (équivalent de i2cdetect) est ici:
+	i2cscan.py (équivalent de i2cdetect) ici:
 		git clone https://github.com/eblot/pyftdi.git --> dans pyftdi/bin/
 		Faut parfois bricoler un peu: 
 			gérer un import manquant (mais inutile: from pyftdi.misc import add_custom_devices) --> commenter
@@ -44,8 +45,9 @@ pin "SDO" permet de changer d'adresse si on le connecte au GND (DS page 17). Je 
 LIS3MDL_SA1_HIGH_ADDRESS   0011110 ->0x1E
 LIS3MDL_SA1_LOW_ADDRESS    0011100 ->0x1C
 
-Mes deux scripts python pour ce sensor:
-	rpi_i2c_lis3mdl.py -> raspberry pi -> utilise pigpio
+Mes scripts python pour lis3mdl:
+	rpi_pigpio.py -> rpi -> utilise pigpio
+	rpi_smbus2.py -> rpi -> en cours de test
 	i2c_pyftdi_lis3mdl.py -> ftdi -> pyftdi 
 
 
