@@ -2,6 +2,7 @@
 "I squared C"
 pins en i²c: CLK SDA et l'alim
 
+## smbus2: en cours de test, parle directement au /dev/i2c*, pas besoin de daemon qui tourne
 
 ## pigpio: python pour le rpi: utilisée initialement pour les bmp280 (voir à côté bmp280.py)
 	lancer pigpiod, astuce: ifconfig lo 127.0.0.1 sinon pigpio.py -- socket.create_connection((localhost, 8888), None) -- plante (hang longtemps+++)
