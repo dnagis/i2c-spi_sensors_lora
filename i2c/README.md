@@ -2,18 +2,20 @@
 "I squared C"
 pins en i²c: CLK SDA et l'alim
 
-## smbus2: en cours de test, parle directement au /dev/i2c*, pas besoin de daemon qui tourne
+## smbus2: python3 sur le rpi, parle directement au /dev/i2c*, pas besoin de daemon qui tourne comme pigpio. ina219 et lis3mdl passés là dessus. pas le bmp280
 
-## pigpio: python pour le rpi: utilisée initialement pour les bmp280 (voir à côté bmp280.py)
-	lancer pigpiod, astuce: ifconfig lo 127.0.0.1 sinon pigpio.py -- socket.create_connection((localhost, 8888), None) -- plante (hang longtemps+++)
+## pigpio: python pour le pi: utilisée initialement pour les bmp280 (voir à côté bmp280.py)
+	pas réinstallé en 2020 dans ma nouvelle distribution
+	il faut lancer pigpiod, astuce: ifconfig lo 127.0.0.1 sinon pigpio.py -- socket.create_connection((localhost, 8888), None) -- plante (hang longtemps+++)
 	
-## pyftdi
-	python3, bien documenté
-	pip install pyftdi (je suppose qu'il faut que les librairies mpsse et ftdi soient installées)
+## pyftdi: python3 sur le NUC: avec les gros dongles violets FT2232H
+	pip install pyftdi (il faut que les librairies mpsse et ftdi soient installées --> le tarball est dans ce repo)
 	
-	**ATTENTION BIG TRICK** pour i2c sur FT2232H il faut connecter AD1 et AD2 ensembles et au SDA du slave 
+	pinouts:
+	SCL <-> AD0
+	SDA --> **ATTENTION BIG TRICK** pour i2c sur FT2232H il faut connecter AD1 et AD2 ensembles <-> SDA du slave 
 		(https://eblot.github.io/pyftdi/api/i2c.html#i2c-wiring et https://eblot.github.io/pyftdi/pinout.html)
-	SCL <-> AD0	
+		
 	
 	i2cscan.py (équivalent de i2cdetect) ici:
 		git clone https://github.com/eblot/pyftdi.git --> dans pyftdi/bin/
@@ -46,8 +48,8 @@ LIS3MDL_SA1_HIGH_ADDRESS   0011110 ->0x1E
 LIS3MDL_SA1_LOW_ADDRESS    0011100 ->0x1C
 
 Mes scripts python pour lis3mdl:
-	rpi_pigpio.py -> rpi -> utilise pigpio
-	rpi_smbus2.py -> rpi -> en cours de test
-	i2c_pyftdi_lis3mdl.py -> ftdi -> pyftdi 
+	rpi_smbus2.py -> rpi -> librairie smbus2
+	rpi_pigpio.py -> rpi -> librairie pigpio (j'aimerais laisser tomber: il faut un daemon qui tourne)	
+	i2c_pyftdi_lis3mdl.py -> FT2232H -> librairie pyftdi 
 
 
