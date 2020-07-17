@@ -10,7 +10,7 @@ Rpi : utiliser rpi_lora_spidev.py (raspi-lora utilise interrupt et me cache la c
 pyftdi sur le NUC et spidev sur le Rpi -> homogénéité
 
 
-## MCP3008 (essentiellement pour tests)
+## MCP3008 (essentiellement pour tester le SPI avec qq chose de simple)
 connexion FTDI 2232 - MCP3008:
 AD1 (TDI/DO = OUTPUT cf p.14 de la DS) sur DIN du mcp3008
 AD2 (TDO/DI) sur DOUT du mcp3008
@@ -41,7 +41,10 @@ Première commande: 2019 (Kloug's) chez Aliexpress -> Semtech SX1276/77/78/79 ba
 Soudure update 2020
 RFM95 -> direct fer classique, pas la peine de se faire chier à la pâte à souder
 
-
+## moments de solitude
+J'ai déjà eu des non fonctionnements  de SX1276 qui ont été résolu peu de temps après que je modifie la fréquence (915 -> 868, et vice et versa) sur l'émetteur et sur le 
+récepteur, sans que je comprenne pourquoi. J'avais noté ça à Palavas, je confirme à Arles à la reprise en juillet 2020, un module monté sur un PCB Tindie m'a fait le coup. Un de mes PCB en Rx sur le rpi fonctionnait
+sans pb, mais pour le Tindie en Tx sur l'esp32 il a fallu que je passe fréquence à 915, puis revenir à 868.
 
 
 ## Lora SX1276 - FTDI breakout violet FT2232H
@@ -140,7 +143,5 @@ RST pas obligatoire pour Lora pour fonctionnement de base avec l'esp32.
 
 
 
-## moments de solitude
-J'ai déjà eu des non fonctionnements qui ont été résolu peu de temps après que je modifie la fréquence (915 -> 868, et vice et versa) sur l'émetteur et sur le 
-récepteur, sans que je comprenne pourquoi
+
 
