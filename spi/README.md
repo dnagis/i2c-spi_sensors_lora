@@ -103,8 +103,6 @@ BCM17 (arg n°2 de lora())			D0	#Attention il **faut** le mettre pour raspi-lora
 
 ## Lora SX1276 - esp32 
 https://github.com/Inteform/esp32-lora-library (pas évident d'adapter librairies arduino sur esp32)
-	builder dans le dir cloné, après avoir ajouté le dir main/ de hello-world, et juste changer le nom du .c et adapter CMakeLists.txt
-	ou
 	cp -af esp32-lora-library/components/lora $ESP-IDF/components/  (tu peux aussi le copier dans ton projet/components je crois)
 	les codes pour Tx/Rx sont dans leur README.md
 	
