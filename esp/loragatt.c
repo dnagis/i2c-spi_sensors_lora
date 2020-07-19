@@ -8,6 +8,10 @@
  * write char depuis bluez pour tests:
  * gatttool -b <bdaddr> --char-write-req -a 0x002a -n 0203ffabef
  * 
+ * gatttool -b <bdaddr> --char-write-req -a 0x002a -n 39313034343864643238383162393662653232 #latlng: 43.66851368 4.62863906
+ * gatttool -b <bdaddr> --char-write-req -a 0x002a -n 39313034343864613638383162393633326463 #latlng: 43.66850664 4.62828252
+
+ * 
  * LoRa: basé sur https://github.com/Inteform/esp32-lora-library
  * cp -af esp32-lora-library/components/lora $ESP-IDF/components/
  * 
