@@ -10,15 +10,12 @@ from time import sleep
 from vvnx_utils import logbdd
 
 #Attention à garder+++ :Pour avoir du log quand crash sur le rpi (python et les strings reçues en LoRa...):
-#./rpi_lora_spidev.py &>log_crash & disown
+#./rpi_lora_spidev.py &>log_crash &
 #	et bien savoir que log_crash ne sera accessible qu'après le crash. Donc les print() de fonctionnement normal ne seront 
 #	visibles qu'une fois que l'appli aura lâché les fd vers le fichier (donc inutile de lire log_crash juste après avoir
-#	lancé la commande: faut se barrer et attendre)
+#	lancé la commande: faut se barrer et attendre). Avant je mettais disown à la fin... utile???
 
-#ToDo
-#	vérifier que le disown est obligatoire. Pas sûr (et donc bash pas obligatoire)
-#	détecter si le module est présent ou pas au démarrage et faire une boucle pour attendre? (inutile d'écrire dans les registers)
-#		tant qu'il n'y a aucun module pour écouter...)
+
 
 
 

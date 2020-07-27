@@ -40,13 +40,13 @@ def logbdd(rx_string):
 	lng = int(lng_hex, 16) / 100000000.0
 	print("on va ecrire", lat, lng)
 	#écriture dans la base de données
-	#CREATE TABLE log (id INTEGER PRIMARY KEY, epoch INTEGER, lat REAL NOT NULL, lng REAL NOT NULL);
-	#sqlite3 log_lora.db "select datetime(epoch, 'unixepoch', 'localtime'), lat, lng from log;"
+	#CREATE TABLE loc (id INTEGER PRIMARY KEY, epoch INTEGER, lat REAL NOT NULL, long REAL NOT NULL);
+	#sqlite3 log_lora.db "select datetime(epoch, 'unixepoch', 'localtime'), lat, long from loc;"
 	con = sqlite3.connect('log_lora.db') 
 	con.text_factory = str #sinon plante avec sqlite3.ProgrammingError: You must not use 8-bit bytestrings unless you use a text_factory... quand je reçois des trucs du genre VÔXèÆeßHÆÿ·cçJ
 	epoch = int(time.time())
 	cur = con.cursor()
 	values = (epoch, lat, lng)
-	cur.execute("insert into log (epoch, lat, lng) values (?, ?, ?)", values)
+	cur.execute("insert into loc (epoch, lat, long) values (?, ?, ?)", values)
 	con.commit()
 	con.close()
