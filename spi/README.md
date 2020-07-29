@@ -47,10 +47,10 @@ récepteur, sans que je comprenne pourquoi. J'avais noté ça à Palavas, je con
 sans pb, mais pour le Tindie en Tx sur l'esp32 il a fallu que je passe fréquence à 915, puis revenir à 868.
 
 
-## Lora SX1276 - FTDI breakout violet FT2232H
-en python, sur un ordi en USB
-lora_pyftdi -> Python3 j'essaie de passer à ça: la doc est plus explicite que mpsse
-lora_mpsse.py -> Python2
+## Lora SX1276 - FTDI (breakout violet FT2232H)
+en python, sur un ordi en USB. Pour l'install cf. ftdi/README.md dans ce repo
+lora_pyftdi -> Python3
+lora_mpsse.py -> Python2 --> donc plus possible depuis focus. A laisser tomber...
 
 NB pas d interrupts (car la puce FTDI ne le supporte pas contrairement à GPIO sur le rpi) donc 4 connexions SPI + l'alim
 
@@ -65,7 +65,7 @@ CS/NSS 			AD3
 
 
 
-## Lora SX1276 - rpi 
+## Lora SX1276 - RPi 
 -rpi_lora_spidev
 	on parle direct aux registers via spidev, comme avec pyftdi. Pas d'interrupts (donc pin D0 inutile) -> lecture de flags dans un loop. 
 	on voit ce qui se passe. du code bio.
@@ -76,9 +76,8 @@ CS/NSS 			AD3
 	raspi-lora utilise Rpi.GPIO pour recevoir un interrupt (D0 sur SX1276), et spidev pour parler à la puce en spi
 	NB je n'ai pas à bricoler dans la librairie!
 deps:
-	python2 (ils disent python3 only mais pas vrai...)
 	modprobe spidev + spi-bcm2835 ( --> /dev/spidev0.0  /dev/spidev0.1)
-	librairies python spidev et RPi.GPIO -> un peu chiant (libpython2.7) voir rpi->python
+	librairies python spidev et RPi.GPIO -> voir cross_2020
 -> install = cp le raspi_lora/ qui contient __init__.py dans site-packages/ 
 -> un truc que j'ai pas eu au départ: chelou: 
  raspi_lora/lora.py ligne 57
@@ -86,7 +85,7 @@ deps:
         self._spi_write(REG_1D_MODEM_CONFIG1, self._modem_config.value[0]) --> AttributeError: 'tuple' object has no attribute 'value
 		self._spi_write(REG_1D_MODEM_CONFIG1, self._modem_config[0]) --> OK
 -> code pour appeler: ci joint rpi_lora.py
--> /lib/python2.7/site-packages/raspi_lora/lora.py est là où tout se passe. nb il m'est déjà arrivé d'y bidouiller des trucs dans _spi_write() et d'oublier de les enlever
+-> /lib/pythonX.Y/site-packages/raspi_lora/lora.py est là où tout se passe. nb il m'est déjà arrivé d'y bidouiller des trucs dans _spi_write() et d'oublier de les enlever
 
 Connexions:
 Rpi	(pinout.xyz)					RFM95
@@ -102,6 +101,8 @@ BCM17 (arg n°2 de lora())			D0	#Attention il **faut** le mettre pour raspi-lora
 
 
 ## Lora SX1276 - esp32 
+mon code loragatt.c est dans esp/ dans ce repo
+install library pour la compil:
 https://github.com/Inteform/esp32-lora-library (pas évident d'adapter librairies arduino sur esp32)
 	cp -af esp32-lora-library/components/lora $ESP-IDF/components/  (tu peux aussi le copier dans ton projet/components je crois)
 	les codes pour Tx/Rx sont dans leur README.md
@@ -111,7 +112,7 @@ Pour lora + gatt pas de difficulté particulière prendre bluetooth/bluedroid/bl
 		pour l'envoi, par exemple dans ESP_GATTS_WRITE_EVT:
 	lora_send_packet(param->write.value, param->write.len);
 
-Connexions: *********ATTENTION PINS ESP32 ET LORA: RISQUE DE MOMENTS DE SOLITUDE+++++***********
+Connexions: *********ATTENTION PINS ESP32 ET LORA: RISQUE DE MOMENTS DE SOLITUDE+++++ CAR TOUS LES PINOUTS NE FONCTIONNENT PAS++++!!!!***********
 config numéros GPIO ça se fait en menuconfig (dans components/lora) 
 Le PCB que je design mars 2020 donne en menuconfig
 	(32) CS GPIO 

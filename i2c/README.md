@@ -8,22 +8,17 @@ pins en i²c: CLK SDA et l'alim
 	pas réinstallé en 2020 dans ma nouvelle distribution
 	il faut lancer pigpiod, astuce: ifconfig lo 127.0.0.1 sinon pigpio.py -- socket.create_connection((localhost, 8888), None) -- plante (hang longtemps+++)
 	
-## pyftdi: python3 sur le NUC: avec les gros dongles violets FT2232H
-	pip install pyftdi (il faut que les librairies mpsse et ftdi soient installées --> le tarball est dans ce repo)
+## pyftdi: gros dongles violets FT2232H en USB sur les ordis 
+	install: cf. ftdi/README.md dans ce repo
 	
-	pinouts:
+	pinouts ftdi pour l'i²c:
 	SCL <-> AD0
 	SDA --> **ATTENTION BIG TRICK** pour i2c sur FT2232H il faut connecter AD1 et AD2 ensembles <-> SDA du slave 
 		(https://eblot.github.io/pyftdi/api/i2c.html#i2c-wiring et https://eblot.github.io/pyftdi/pinout.html)
 		
 	
-	i2cscan.py (équivalent de i2cdetect) ici:
-		git clone https://github.com/eblot/pyftdi.git --> dans pyftdi/bin/
-		Faut parfois bricoler un peu: 
-			gérer un import manquant (mais inutile: from pyftdi.misc import add_custom_devices) --> commenter
-		Interprétation:
+	/usr/bin/i2cscan.py installé automatiquement à l'install pyftdi:
 		
-				# ./i2cscan.py ftdi://ftdi:2232:1:58/1
 		    0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F 
 		 0: .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
 		 1: .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .

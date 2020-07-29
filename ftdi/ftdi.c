@@ -1,3 +1,5 @@
+/**Date d'avant focus**/
+
 #include <unistd.h>
 #include <stdio.h>
 #include <ftdi.h>
