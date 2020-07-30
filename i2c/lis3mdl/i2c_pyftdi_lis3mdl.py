@@ -9,6 +9,7 @@ from binascii import hexlify
 from math import atan2, degrees
 import time
 import sys
+import sqlite3
 
 
 
@@ -133,7 +134,7 @@ while(True):
 	
 	#pas print() car je veux une ligne qui s'auto écrase
 	#sys.stdout.write("X={:.6f} Y={:.6f} Z={:.6f} \r".format( raw_data[0],  raw_data[1], raw_data[2] ))
-	#logbdd_mag(data) #dans vvnx_utils.py. pour calibration only (pour déterminer max et min obtenu pour chacun en bougeant dans tous les sens	
+	#logbdd_mag(raw_data) #dans vvnx_utils.py. pour calibration only (pour déterminer max et min obtenu pour chacun en bougeant dans tous les sens	
 	
 	cd = correction_offset(raw_data) #pour ça il faut avoir fait la calibration
 	sys.stdout.write("X={:.6f} Y={:.6f} Z={:.6f} angle={}   \r".format( cd[0], cd[1], cd[2], vector_2_degrees(cd[0],cd[1]) ))
