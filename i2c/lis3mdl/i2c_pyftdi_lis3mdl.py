@@ -151,11 +151,5 @@ while(True):
 # --> log dans une bdd et rotater le capteur comme un avion, puis récupérer les valeurs min et max pour chaque axe
 #select min(X) from mag; et max(X), etc......
 
-#valeurs X Y -> heading
-#math.atan2(y, x) en python donne un résultat en coordonnées polaires, en radians compris entre -pi et +pi. atan2 peut donner le quadrant car il a le signe
-#pour récupérer les degrés à partir de ça: math.degrees(theta)
-#math.atan2(1, 1) -> 0.7853981633974483
-#math.degrees(0.7853981633974483) -> 45.0
 
-#la face avec les pinouts orientée vers le nord => angle = 0
 
