@@ -45,9 +45,9 @@ def logbdd_mag(data):
 
 
 def correction_offset(data):
-	cx = data[0] - ((0.363197895352236 - 0.578193510669395) / 2)
-	cy = data[1] - ((0.143671441099094 - 0.748757673194972) / 2)
-	cz = data[2] - ((0.989330605086232 + 0.106986261327097) / 2)
+	cx = data[0] - (0.332943583747442 - ((0.332943583747442 + 0.501461560947091) / 2))
+	cy = data[1] - (0.00555393159894768 - ((0.00555393159894768 + 0.532154340836013) / 2))
+	cz = data[2] - (0.978807366267173 - ((0.978807366267173 - 0.247003800058462) / 2))
 	cd = (cx, cy, cz)
 	return cd
 
@@ -60,7 +60,7 @@ def scaled(val):
 	return val / 6842
 	
 def vector_2_degrees(x, y):
-    angle = int(degrees(atan2(x, y)))
+    angle = -int(degrees(atan2(x, y)))
     if angle < 0:
         angle += 360
     return angle
