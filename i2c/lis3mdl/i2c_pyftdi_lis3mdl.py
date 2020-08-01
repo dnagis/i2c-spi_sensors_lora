@@ -89,10 +89,9 @@ def correction_offset(data):
 
 	
 	
-
-
-def vector_2_degrees(x, y):
-    angle = int(degrees(atan2(x, y)))
+#Explications du calcul dans le README.md
+def vector_2_degrees(y, x):
+    angle = -int(degrees(atan2(y, x)))
     if angle < 0:
         angle += 360
     return angle
