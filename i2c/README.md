@@ -2,6 +2,8 @@
 "I squared C"
 pins en i²c: CLK SDA et l'alim
 
+## i2cdetect -y 1 (busybox fait i2cdetect now!!!) 
+
 ## smbus2: python3 sur le rpi, parle directement au /dev/i2c*, pas besoin de daemon qui tourne comme pigpio. ina219 et lis3mdl passés là dessus. pas le bmp280
 
 ## pigpio: python pour le pi: utilisée initialement pour les bmp280 (voir à côté bmp280.py)
@@ -17,7 +19,7 @@ pins en i²c: CLK SDA et l'alim
 		(https://eblot.github.io/pyftdi/api/i2c.html#i2c-wiring et https://eblot.github.io/pyftdi/pinout.html)
 		
 	
-	/usr/bin/i2cscan.py installé automatiquement à l'install pyftdi:
+	FTDI: /usr/bin/i2cscan.py (installé automatiquement à l'install pyftdi), sur le RPi équivalent = i2cdetect (busybox maintenant!!!)
 		
 		    0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F 
 		 0: .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .

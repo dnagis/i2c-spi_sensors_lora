@@ -102,7 +102,7 @@ ctrl.configure('ftdi://ftdi:2232h/1')
 
 #ttps://eblot.github.io/pyftdi/api/i2c.html
 
-slave = ctrl.get_port(0x1E) #l'adresse sur le bus, i2cdetect (i2c-tools) ou i2cscan.py (pyftdi). Definie dans DS p.17, depend de SDO au GND ou pas
+slave = ctrl.get_port(0x1E) #l'adresse sur le bus, i2cdetect (busybox now!!!) ou i2cscan.py (pyftdi). Definie dans DS p.17, depend de SDO au GND ou pas
 
 #commentaires extensifs dans lis3mdl-arduino
 #slave.write_to(CTRL_REG1_ADDR, b'\xF0') #0x70 = 0b01110000, 0xF0 = 0b11110000 (TEMP_EN, OM = 11 (ultra-high-performance mode for X and Y); DO = 100 (10 Hz ODR))
