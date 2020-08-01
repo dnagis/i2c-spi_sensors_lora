@@ -68,15 +68,15 @@ def logbdd_mag(data):
 	con.close()
 
 
-#X : -0.578193510669395 <-> 0.363197895352236
-#Y : -0.748757673194972 <-> 0.143671441099094
-#Z : 0.106986261327097 <-> 0.989330605086232 
+#X : MIN -0.501461560947091 MAX 0.332943583747442
+#Y : MIN -0.532154340836013 MAX 0.00555393159894768
+#Z : MIN 0.247003800058462 MAX 0.978807366267173
 
-
+#le max moins la moitié du range est soustrait de la valeur. Le but est que ça tourne autour de zero.
 def correction_offset(data):
-	cx = data[0] - ((0.363197895352236 - 0.578193510669395) / 2)
-	cy = data[1] - ((0.143671441099094 - 0.748757673194972) / 2)
-	cz = data[2] - ((0.989330605086232 + 0.106986261327097) / 2)
+	cx = data[0] - (0.332943583747442 - ((0.332943583747442 + 0.501461560947091) / 2))
+	cy = data[1] - (0.00555393159894768 - ((0.00555393159894768 + 0.532154340836013) / 2))
+	cz = data[2] - (0.978807366267173 - ((0.978807366267173 - 0.247003800058462) / 2))
 	cd = (cx, cy, cz)
 	return cd
 
@@ -134,7 +134,7 @@ while(True):
 	
 	#pas print() car je veux une ligne qui s'auto écrase
 	#sys.stdout.write("X={:.6f} Y={:.6f} Z={:.6f} \r".format( raw_data[0],  raw_data[1], raw_data[2] ))
-	#logbdd_mag(raw_data) #dans vvnx_utils.py. pour calibration only (pour déterminer max et min obtenu pour chacun en bougeant dans tous les sens	
+	#logbdd_mag(raw_data) #calibration, cf explication ci dessous	
 	
 	cd = correction_offset(raw_data) #pour ça il faut avoir fait la calibration
 	sys.stdout.write("X={:.6f} Y={:.6f} Z={:.6f} angle={}   \r".format( cd[0], cd[1], cd[2], vector_2_degrees(cd[0],cd[1]) ))
@@ -148,7 +148,7 @@ while(True):
 #https://appelsiini.net/2018/calibrate-magnetometer/
 #les valeurs float brutes (genre -0.5781935) ne sont pas réparties autour de 0
 #il faut faire la calibration comme sur un téléphone:
-# --> log dans une bdd et rotater le capteur comme un avion, puis récupérer les valeurs min et max pour chaque axe
+# --> log dans une bdd et rotater le capteur comme un avion (tilt, tanguage, roll, etc...) , puis récupérer les valeurs min et max pour chaque axe
 #select min(X) from mag; et max(X), etc......
 
 
