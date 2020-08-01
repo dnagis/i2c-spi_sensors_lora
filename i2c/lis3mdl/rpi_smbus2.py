@@ -3,11 +3,13 @@
 
 #lis3mdl (magnetometer) 
 #en smbus2 pour le rpi, pas pigpio (pas besoin de daemon avec cette librairie)
+#les commentaires dans la version pyftdi
 
 from smbus2 import SMBus
 import time
 from math import atan2, degrees
 import sys
+import sqlite3
 
 SLAVE_ADDR		=  0x1E
 
@@ -33,7 +35,15 @@ INT_SRC_ADDR     = 0x31
 INT_THS_L_ADDR   = 0x32
 INT_THS_H_ADDR   = 0x33
 
-#voir le script pyftdi lis3mdl pour comment calibrer
+
+def logbdd_mag(data):
+	con = sqlite3.connect('mag.db') 
+	cur = con.cursor()
+	cur.execute("insert into mag (X, Y, Z) values (?, ?, ?)", data)
+	con.commit()
+	con.close()
+
+
 def correction_offset(data):
 	cx = data[0] - ((0.363197895352236 - 0.578193510669395) / 2)
 	cy = data[1] - ((0.143671441099094 - 0.748757673194972) / 2)
@@ -85,6 +95,8 @@ while(True):
 	raw_data=(scaled(twos_comp(MAG_X)), scaled(twos_comp(MAG_Y)), scaled(twos_comp(MAG_Z)))
 	
 	cd = correction_offset(raw_data)
+	
+	#logbdd_mag(raw_data) #calibration
 	
 	sys.stdout.write("X={:.6f} Y={:.6f} Z={:.6f} angle={}   \r".format( cd[0], cd[1], cd[2], vector_2_degrees(cd[0],cd[1]) ))
 	time.sleep(0.1)
