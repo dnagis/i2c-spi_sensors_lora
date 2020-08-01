@@ -55,6 +55,13 @@ def twos_comp(val):
 #quand tu es à FS +/- 4 (REG2) le tableau dit: il y a 6842 LSB par Gauss. J'ai mon result en LSB donc regle de 3.
 def scaled(val):
 	return val / 6842
+	
+##Calibration
+#https://appelsiini.net/2018/calibrate-magnetometer/
+#les valeurs float raw (genre -0.5781935) ne sont pas réparties autour de 0 --> on corrige par offset
+#pour  faire la calibration comme sur un téléphone:
+# --> log dans une bdd et rotater le capteur comme un avion (tilt, tanguage, roll, etc...) , puis récupérer les valeurs min et max pour chaque axe
+#select min(X) from mag; et max(X), etc......
 
 
 #Calibration (uniquement pour récupérer les valeurs min et max de chaque axe lors de la calibration, inutile sinon)
@@ -67,7 +74,7 @@ def logbdd_mag(data):
 	con.commit()
 	con.close()
 
-
+#Dernière calibration (Arles bureau inside)
 #X : MIN -0.501461560947091 MAX 0.332943583747442
 #Y : MIN -0.532154340836013 MAX 0.00555393159894768
 #Z : MIN 0.247003800058462 MAX 0.978807366267173
@@ -144,12 +151,7 @@ while(True):
 
 
 
-#calibration
-#https://appelsiini.net/2018/calibrate-magnetometer/
-#les valeurs float brutes (genre -0.5781935) ne sont pas réparties autour de 0
-#il faut faire la calibration comme sur un téléphone:
-# --> log dans une bdd et rotater le capteur comme un avion (tilt, tanguage, roll, etc...) , puis récupérer les valeurs min et max pour chaque axe
-#select min(X) from mag; et max(X), etc......
+
 
 
 
