@@ -44,10 +44,15 @@ def logbdd_mag(data):
 	con.close()
 
 
+#calibration parc musée arles antiques
+#X -0.389505992399883 0.235895936860567
+#Y -0.597339959076293 0.191610640163695
+#Z 0.143525285004385 0.473545746857644
+
 def correction_offset(data):
-	cx = data[0] - (0.332943583747442 - ((0.332943583747442 + 0.501461560947091) / 2))
-	cy = data[1] - (0.00555393159894768 - ((0.00555393159894768 + 0.532154340836013) / 2))
-	cz = data[2] - (0.978807366267173 - ((0.978807366267173 - 0.247003800058462) / 2))
+	cx = data[0] - (0.235895936860567 - ((0.235895936860567 + 0.389505992399883) / 2))
+	cy = data[1] - (0.191610640163695 - ((0.191610640163695 + 0.597339959076293) / 2))
+	cz = data[2] - (0.473545746857644 - ((0.473545746857644 - 0.143525285004385) / 2))
 	cd = (cx, cy, cz)
 	return cd
 
@@ -85,19 +90,18 @@ print("REG5: {:#010b}".format(bus.read_byte_data(SLAVE_ADDR, CTRL_REG5_ADDR)))
 
 
 
-while(True):
-	MAG_OUT = bus.read_i2c_block_data(SLAVE_ADDR, OUT_X_L_ADDR,6)
-	
-	MAG_X = MAG_OUT[1] << 8 | MAG_OUT[0] #combine high and low bytes
-	MAG_Y = MAG_OUT[3] << 8 | MAG_OUT[2]
-	MAG_Z = MAG_OUT[5] << 8 | MAG_OUT[4]
-	
-	raw_data=(scaled(twos_comp(MAG_X)), scaled(twos_comp(MAG_Y)), scaled(twos_comp(MAG_Z)))
-	
-	cd = correction_offset(raw_data)
-	
-	#logbdd_mag(raw_data) #calibration
-	
-	sys.stdout.write("X={:.6f} Y={:.6f} Z={:.6f} angle={}   \r".format( cd[0], cd[1], cd[2], vector_2_degrees(cd[0],cd[1]) ))
-	time.sleep(0.1)
-	
+#while(True):
+MAG_OUT = bus.read_i2c_block_data(SLAVE_ADDR, OUT_X_L_ADDR,6)
+
+MAG_X = MAG_OUT[1] << 8 | MAG_OUT[0] #combine high and low bytes
+MAG_Y = MAG_OUT[3] << 8 | MAG_OUT[2]
+MAG_Z = MAG_OUT[5] << 8 | MAG_OUT[4]
+
+raw_data=(scaled(twos_comp(MAG_X)), scaled(twos_comp(MAG_Y)), scaled(twos_comp(MAG_Z)))
+
+cd = correction_offset(raw_data)
+
+#logbdd_mag(raw_data) #calibration
+
+sys.stdout.write("X={:.6f} Y={:.6f} Z={:.6f} angle={}   \r".format( cd[0], cd[1], cd[2], vector_2_degrees(cd[0],cd[1]) ))
+#time.sleep(0.1) #si tu veux une boucle
