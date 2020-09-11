@@ -27,7 +27,7 @@
 #include "driver/adc.h"
 
 
-int tours;
+int count_raw, count_per_time;
 #define THRESHOLD     85
 //anemo/hall
 
@@ -303,7 +303,7 @@ void example_exec_write_event_env(prepare_type_env_t *prepare_write_env, esp_ble
 void vvnx_send_indicate(esp_ble_gatts_cb_param_t *param){
 	
 	while(1) {
-		data_to_send[0] = tours;		
+		data_to_send[0] = count_per_time;		
         esp_ble_gatts_send_indicate(gl_profile_tab[0].gatts_if, param->connect.conn_id, gl_profile_tab[PROFILE_A_APP_ID].char_handle, sizeof(data_to_send), data_to_send, false);
         vTaskDelay(5000 / portTICK_PERIOD_MS);
     }    
@@ -539,7 +539,7 @@ static void task_hall(void* arg)
 		} else {
 			if (sup_thrshld) {
 					//printf("debug: dans if (sup_threshld)\n");
-					tours++;
+					count_raw++;
 					sup_thrshld = false;
 				}
 		}
@@ -553,8 +553,9 @@ static void task_time_counter(void* arg)
 {
     while (1) {
         vTaskDelay(5000 / portTICK_PERIOD_MS);
-        printf("tours = %i\n", tours);
-        tours = 0;
+        printf("tours = %i\n", count_raw);
+        count_per_time = count_raw;
+        count_raw = 0;
     }
 }
 
@@ -580,7 +581,8 @@ void app_main(void)
     esp_ble_gatts_app_register(PROFILE_A_APP_ID);
     
     //hall sensor
-    tours = 0;
+    count_raw = 0;
+    count_per_time = 0;
 	xTaskCreate(task_hall, "task_hall", 2048, NULL, 10, NULL);
 	xTaskCreate(task_time_counter, "task_time_counter", 2048, NULL, 10, NULL);
 
