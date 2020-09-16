@@ -530,7 +530,7 @@ static void task_hall(void* arg)
 	
     while (1) {
 		int hall = hall_sensor_read();
-		//printf("hall:%i tours:%i\n", hall, tours);
+		//printf("hall:%i tours:%i\n", hall, count_raw);
 		
 		//on ne count++ que si on on passe au dessus du seuil puis en dessous
 		if(hall > THRESHOLD) {
