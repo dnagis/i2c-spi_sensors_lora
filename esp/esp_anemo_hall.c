@@ -21,7 +21,7 @@
 #include "driver/adc.h"
 
 int tours;
-#define THRESHOLD     85
+#define THRESHOLD     75
 
 
 
@@ -29,7 +29,7 @@ static void task_time_counter(void* arg)
 {
     while (1) {
         vTaskDelay(5000 / portTICK_PERIOD_MS);
-        printf("tours = %i\n", tours);
+        printf("Tours = %i\n", tours);
         tours = 0;
     }
 }
@@ -43,7 +43,7 @@ static void task_hall(void* arg)
 	
     while (1) {
 		int hall = hall_sensor_read();
-		//printf("hall:%i tours:%i\n", hall, tours);
+		//printf("%i\n", hall);
 		
 		//on ne count++ que si on on passe au dessus du seuil puis en dessous
 		if(hall > THRESHOLD) {
