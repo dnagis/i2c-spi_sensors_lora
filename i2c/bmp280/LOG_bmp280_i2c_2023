@@ -1,0 +1,98 @@
+##i2c sur RPi4 version 2023 au Pays Basque! Avec le bmp280
+
+## Driver i2c sur le Pi
+modprobe i2c-dev
+modprobe i2c-bcm2835
+--> fait apparaitre /dev/i2c-1
+
+## Busybox i2c tools
+p.24 du pdf datasheet du bmp280 --> lire le register à l'adresse 0xD0 doit retourner 0x58 -->
+i2cdetect -y 1 --> montre que qq chose sur la matrice en 0x77
+i2cget -y 1 0x77 0xD0 --> 0x58
+
+## Second shot (ce que je compte installer dans le ext4 rpi4): package bmp-280 (bmp_280)
+Jbmp-280 --> https://pypi.org/project/bmp-280/ , pas pimoroni
+ce qui est sympa ici c'est que la seule autre dép est smbus2 (donc pas i2cdevice), + que la page pypi donne un exemple de code qui est simple+++
+pip download bmp-280 --> bmp_280-0.1.2-py3-none-any.whl
+il faut changer l'adresse sur le bus dans /lib/python3.8/site-packages/bmp_280/bmp_280.py --> BMP280_ADDR = 0x77 (ce que renvoie i2cdetect -y 1)
+le package installe un /bin/run-bmp280 qui est le même que sur la page https://pypi.org/project/bmp-280/ et qui est simplissime
+
+install dans le sfs:
+sur un fresh install du ext4 (à partir de mon sfs), j'installe les packages smbus2 et bmp-280 avec pip install <nom>.whl
+modifier l'adresse du capteur dans /lib/python3.8/site-packages/bmp_280/bmp_280.py (BMP280_ADDR = 0x77 (ce que renvoie i2cdetect -y 1))
+je fais ces manips sur la SD Kingston Canvas 128Go le sam 100623
+
+ensuite il faudra récupérer le site-packages/ et le /bin/run-bmp280 --> nouveau ext4 .sfs
+
+
+
+
+## First shot à Pau: pimoroni
+https://iotstarters.com/configuring-bmp280-sensor-with-raspberry-pi/?utm_content=cmp-true
+
+git clone https://github.com/pimoroni/bmp280-python
+bmp280-python/examples/temperature-and-pressure.py
+il faut installer (cp dns site-packages) bmp280-python/library/bmp280/ qui ne contient qu'un fichier: __init__.py
+
+deps: smbus2 et i2cdevice
+
+pip download smbus2 --> 0.4.2
+pip install smbus2-0.4.2-py2.py3-none-any.whl
+--> from smbus2 import SMBus --> OK
+
+pip download i2cdevice --> 0.0.7
+pip install i2cdevice-0.0.7-py3-none-any.whl
+
+lancement du script bmp280-python/examples/temperature-and-pressure.py 
+
+cd /initrd/mnt/dev_save/packages/bmp280-python/library
+cp -af bmp280 /usr/lib/python3.8/site-packages/ (en focus, sinon /lib/python3.8/site-packages/)
+--> from bmp280 import BMP280 --> OK
+
+je lance le script temperature-and-pressure.py j'ai:
+RuntimeError: Unable to find bmp280 on 0x76, IOError
+
+dans /lib/python3.8/site-packages/bmp280/__init__.py je modifie:
+I2C_ADDRESS_GND = 0x76 --> 0x77 (car i2cdetect -y 1 montre qq chose en 77)
+
+--> le script temperature-and-pressure.py renvoie un output avec Temp et Pression
+
+### Install dans le sfs
+Il suffit d'installer 3 directories dans le dir /lib/python3.8/site-packages/ pour pouvoir faire les imports
+smbus2 (0.4.2) --> en focus je l'installe, j'ai 2 nouveaux dirs dans site-packages/ : smbus2 et smbus2-0.4.2.dist-info, je n'installe que le premier sur le Pi
+i2cdevice (0.0.7) --> en focus je l'installe, j'ai 2 nouveaux dirs dans site-packages/ : i2cdevice et i2cdevice-0.0.7.dist-info, je n'installe que le premier sur le Pi
+
+--> je découvre que j'ai déjà un /lib/python3.8/site-packages/smbus2 sur le Pi, probablement une vieille version.
+je l'overwrite et je copie aussi le dir i2cdevice/
+je copie aussi le dir bmp280 qui vient de https://github.com/pimoroni/bmp280-python dans library/
+
+dans /lib/python3.8/site-packages/bmp280/__init__.py je fais la modif:
+I2C_ADDRESS_GND = 0x77
+
+je fais les deux modprobes
+
+--> le script https://github.com/pimoroni/bmp280-python /examples/temperature-and-pressure.py fonctionne
+
+je découvre que pip install bmp280 --> le package existe! Donc le clone de https://github.com/pimoroni/bmp280-python ne serait pas nécessaire?
+pip download bmp280 recupere un bmp280-0.0.4.tar.gz --> j'essaie de l'installer après avoir enlevé bmp280 du clone pimoroni
+en fait le package bmp280 chez pypi et le github pimoroni c'est la même chose:
+https://pypi.org/project/bmp280/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
