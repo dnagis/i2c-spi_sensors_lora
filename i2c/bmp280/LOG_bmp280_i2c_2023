@@ -10,19 +10,17 @@ p.24 du pdf datasheet du bmp280 --> lire le register à l'adresse 0xD0 doit reto
 i2cdetect -y 1 --> montre que qq chose sur la matrice en 0x77
 i2cget -y 1 0x77 0xD0 --> 0x58
 
-## Second shot (ce que je compte installer dans le ext4 rpi4): package bmp-280 (bmp_280)
+## Python: package bmp-280 (bmp_280)
 Jbmp-280 --> https://pypi.org/project/bmp-280/ , pas pimoroni
-ce qui est sympa ici c'est que la seule autre dép est smbus2 (donc pas i2cdevice), + que la page pypi donne un exemple de code qui est simple+++
+ce qui est sympa ici c'est que la seule dép est smbus2 (donc pas i2cdevice), + que la page pypi donne un exemple de code qui est simple+++
 pip download bmp-280 --> bmp_280-0.1.2-py3-none-any.whl
 il faut changer l'adresse sur le bus dans /lib/python3.8/site-packages/bmp_280/bmp_280.py --> BMP280_ADDR = 0x77 (ce que renvoie i2cdetect -y 1)
 le package installe un /bin/run-bmp280 qui est le même que sur la page https://pypi.org/project/bmp-280/ et qui est simplissime
 
-install dans le sfs:
-sur un fresh install du ext4 (à partir de mon sfs), j'installe les packages smbus2 et bmp-280 avec pip install <nom>.whl
+install dans le rpi4_ext4.sfs le 110623:
+j'installe les packages smbus2 et bmp-280 avec pip install <nom_du_wheel>.whl
 modifier l'adresse du capteur dans /lib/python3.8/site-packages/bmp_280/bmp_280.py (BMP280_ADDR = 0x77 (ce que renvoie i2cdetect -y 1))
-je fais ces manips sur la SD Kingston Canvas 128Go le sam 100623
-
-ensuite il faudra récupérer le site-packages/ et le /bin/run-bmp280 --> nouveau ext4 .sfs
+ensuite je copie dans le squashfs-root site-packages et /bin/run-bmp280
 
 
 
