@@ -2,7 +2,10 @@
 "I squared C"
 pins en i²c: CLK SDA et l'alim
 
-## i2cdetect -y 1 (busybox fait i2cdetect now!!!) 
+## bash adresse de la chip et lire un register, exemple du bmp280
+i2cdetect -y 1 --> busybox, montre que qq chose sur la matrice en 0x77
+p.24 pdf datasheet du bmp280 --> lire le register à l'adresse 0xD0 doit retourner 0x58 -->
+i2cget -y 1 0x77 0xD0 --> busybox, 0x58
 
 ## smbus2: python3 sur le rpi, parle directement au /dev/i2c*, pas besoin de daemon qui tourne comme pigpio. ina219 et lis3mdl passés là dessus. pas le bmp280
 
